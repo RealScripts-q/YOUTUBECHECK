@@ -4,227 +4,266 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>realTube - Custom YouTube</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://apis.google.com/js/api.js"></script>
     <style>
         body {
             background-color: #181818;
             color: white;
             font-family: Arial, sans-serif;
+            padding: 0;
+            margin: 0;
         }
+
         .container {
+            width: 100%;
             max-width: 1200px;
             margin: auto;
+            text-align: center;
+            padding: 20px;
         }
+
+        header {
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin: 0;
+        }
+
         .video-card {
             background-color: #282828;
             border-radius: 10px;
             padding: 10px;
             margin: 10px;
-            width: 320px;
+            display: inline-block;
+            width: 300px;
         }
-        .video-card iframe {
-            border-radius: 10px;
+
+        .video-card img {
             width: 100%;
+            border-radius: 10px;
             height: 180px;
         }
-        .dropdown {
-            position: relative;
-            display: inline-block;
+
+        .video-card button {
+            background-color: #3b82f6;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
         }
+
+        .video-card button:hover {
+            background-color: #2563eb;
+        }
+
         .dropdown-content {
             display: none;
             position: absolute;
             background-color: #282828;
-            min-width: 200px;
-            box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
             z-index: 1;
             border-radius: 5px;
         }
+
         .dropdown:hover .dropdown-content {
             display: block;
         }
-        .video-actions button {
-            margin: 5px;
+
+        .form-container {
+            background-color: #282828;
+            padding: 20px;
+            border-radius: 10px;
+            width: 400px;
+            margin: auto;
         }
-        .video-actions {
-            text-align: center;
+
+        .form-container input, .form-container textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            background-color: #333;
+            color: white;
         }
-        .fullscreen-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.9);
+
+        .form-container button {
+            background-color: #3b82f6;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            width: 100%;
+        }
+
+        .form-container button:hover {
+            background-color: #2563eb;
+        }
+
+        .channel-info {
             display: flex;
-            justify-content: center;
             align-items: center;
-            z-index: 999;
-            display: none;
+            justify-content: center;
+            margin: 20px 0;
         }
-        .fullscreen-overlay iframe {
-            width: 80%;
-            height: 80%;
+
+        .channel-info img {
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .video-player {
+            max-width: 900px;
+            margin: auto;
         }
     </style>
 </head>
 <body>
-    <div class="container text-center p-4">
-        <h1 class="text-3xl font-bold mb-4">Welcome to realTube</h1>
-        <div class="flex justify-center mb-4">
-            <input type="text" id="searchInput" placeholder="Search Videos" class="p-2 w-1/2 rounded text-black">
-            <button id="searchButton" class="bg-blue-500 text-white px-4 py-2 ml-2 rounded">Search</button>
-        </div>
-        <button id="authButton" class="bg-yellow-500 px-4 py-2 rounded">Sign in with Google</button>
-        <button id="uploadButton" class="bg-green-500 px-4 py-2 rounded">Upload Video</button>
-    </div>
+    <div class="container">
+        <header>
+            <h1>Welcome to realTube</h1>
+            <button onclick="toggleChannelForm()" class="bg-blue-500 text-white px-4 py-2 rounded">Create Channel</button>
+            <button onclick="toggleUploadForm()" class="bg-green-500 text-white px-4 py-2 rounded">Upload Video</button>
+        </header>
 
-    <div id="videoResults" class="flex flex-wrap justify-center"></div>
-
-    <!-- Fullscreen Overlay -->
-    <div id="fullscreenOverlay" class="fullscreen-overlay">
-        <div class="video-actions text-white text-center">
-            <button id="likeButton" class="bg-red-500 px-4 py-2 rounded">❤️ Like</button>
-            <button id="dislikeButton" class="bg-gray-500 px-4 py-2 rounded">👎 Dislike</button>
-            <button id="favoriteButton" class="bg-yellow-500 px-4 py-2 rounded">⭐ Favorite</button>
-            <button id="shareButton" class="bg-blue-500 px-4 py-2 rounded">🔗 Share</button>
-            <button id="closeFullscreen" class="bg-black px-4 py-2 rounded">Close</button>
+        <div class="form-container" id="channelForm" style="display:none;">
+            <h2>Create Your Channel</h2>
+            <input type="text" id="channelName" placeholder="Channel Name">
+            <input type="file" id="profilePicture">
+            <textarea id="bio" placeholder="Write your bio..."></textarea>
+            <button onclick="createChannel()">Create Channel</button>
         </div>
-        <iframe id="fullscreenIframe" frameborder="0"></iframe>
+
+        <div class="form-container" id="uploadForm" style="display:none;">
+            <h2>Upload Your Video</h2>
+            <input type="text" id="videoTitle" placeholder="Video Title">
+            <input type="file" id="videoFile" accept="video/*">
+            <textarea id="videoDescription" placeholder="Video Description"></textarea>
+            <button onclick="uploadVideo()">Upload Video</button>
+        </div>
+
+        <div class="video-player" id="videoPlayer" style="display:none;">
+            <h2 id="videoPlayerTitle"></h2>
+            <video id="videoElement" controls width="100%"></video>
+            <div>
+                <button onclick="likeVideo()">Like</button>
+                <button onclick="dislikeVideo()">Dislike</button>
+                <button onclick="saveVideo()">Save</button>
+            </div>
+            <p>Views: <span id="viewCount">0</span></p>
+        </div>
+
+        <div id="videoResults" class="flex flex-wrap justify-center"></div>
     </div>
 
     <script>
-        const CLIENT_ID = 'YOUR_CLIENT_ID';
-        const API_KEY = 'YOUR_API_KEY';
-        const SCOPES = 'https://www.googleapis.com/auth/youtube.upload';
+        let videos = [];
+        let channels = [];
+        let subscriptions = [];
+        let loggedInUser = null;
+        let currentVideo = null;
 
-        let currentVideoId = '';
-        let currentVideoDetails = {};
-
-        function loadClient() {
-            gapi.client.setApiKey(API_KEY);
-            return gapi.client.load("https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest");
+        function toggleChannelForm() {
+            document.getElementById("channelForm").style.display = document.getElementById("channelForm").style.display === 'none' ? 'block' : 'none';
+            document.getElementById("uploadForm").style.display = 'none';
         }
 
-        function authenticate() {
-            return gapi.auth2.getAuthInstance().signIn()
-                .then(() => console.log("Sign-in successful"), err => console.error("Error signing in", err));
+        function toggleUploadForm() {
+            document.getElementById("uploadForm").style.display = document.getElementById("uploadForm").style.display === 'none' ? 'block' : 'none';
+            document.getElementById("channelForm").style.display = 'none';
         }
 
-        function loadAuthClient() {
-            gapi.load('client:auth2', () => {
-                gapi.auth2.init({client_id: CLIENT_ID});
-            });
+        function createChannel() {
+            const channelName = document.getElementById("channelName").value;
+            const bio = document.getElementById("bio").value;
+            const profilePicture = URL.createObjectURL(document.getElementById("profilePicture").files[0]);
+
+            const newChannel = {
+                id: Date.now().toString(),
+                name: channelName,
+                bio: bio,
+                profilePicture: profilePicture,
+                subscribers: 0
+            };
+
+            channels.push(newChannel);
+            loggedInUser = newChannel;  // Simulating logged-in user is the channel owner
+            alert("Channel Created!");
+            document.getElementById("channelForm").reset();
+            toggleChannelForm();
         }
 
-        function saveSearchHistory(query) {
-            let history = JSON.parse(localStorage.getItem('searchHistory')) || [];
-            if (!history.includes(query)) {
-                history.unshift(query);
-                localStorage.setItem('searchHistory', JSON.stringify(history));
-            }
-            displaySearchHistory();
+        function uploadVideo() {
+            const videoTitle = document.getElementById("videoTitle").value;
+            const videoDescription = document.getElementById("videoDescription").value;
+            const videoFile = document.getElementById("videoFile").files[0];
+
+            const newVideo = {
+                id: Date.now().toString(),
+                title: videoTitle,
+                description: videoDescription,
+                videoUrl: URL.createObjectURL(videoFile),
+                views: 0,
+                likes: 0,
+                dislikes: 0,
+                userId: loggedInUser.id,
+                saved: false
+            };
+
+            videos.push(newVideo);
+            displayVideos();
+            document.getElementById("uploadForm").reset();
+            toggleUploadForm();
         }
 
-        function displaySearchHistory() {
-            const historyList = document.getElementById('searchHistory');
-            historyList.innerHTML = '';
-            const history = JSON.parse(localStorage.getItem('searchHistory')) || [];
-            history.forEach(query => {
-                let li = document.createElement('li');
-                li.textContent = query;
-                li.classList.add('cursor-pointer', 'hover:underline');
-                li.onclick = () => searchVideos(query);
-                historyList.appendChild(li);
-            });
-        }
-
-        function searchVideos(query) {
-            saveSearchHistory(query);
-            gapi.client.youtube.search.list({
-                part: 'snippet',
-                q: query,
-                type: 'video',
-                maxResults: 10
-            }).then(response => {
-                const videos = response.result.items;
-                displayVideos(videos);
-            }, error => alert('Error: ' + error.result.error.message));
-        }
-
-        function displayVideos(videos) {
-            const resultsDiv = document.getElementById('videoResults');
+        function displayVideos() {
+            const resultsDiv = document.getElementById("videoResults");
             resultsDiv.innerHTML = '';
-            
+
             videos.forEach(video => {
-                let videoCard = document.createElement('div');
-                videoCard.className = 'video-card';
-                
-                let iframe = document.createElement('iframe');
-                iframe.src = `https://www.youtube.com/embed/${video.id.videoId}`;
-                iframe.onclick = () => openFullscreen(video.id.videoId, video.snippet.title, video.snippet.channelTitle);
-                
-                let title = document.createElement('h3');
-                title.textContent = video.snippet.title;
-                title.className = 'text-lg font-bold mt-2';
-                
-                let videoActions = document.createElement('div');
-                videoActions.className = 'video-actions';
-                videoActions.innerHTML = `
-                    <button class="bg-red-500 px-4 py-2 rounded">Like</button>
-                    <button class="bg-blue-500 px-4 py-2 rounded">Subscribe</button>
-                `;
-                
-                videoCard.appendChild(iframe);
-                videoCard.appendChild(title);
-                videoCard.appendChild(videoActions);
+                const videoCard = document.createElement("div");
+                videoCard.className = "video-card";
+
+                const videoThumbnail = document.createElement("img");
+                videoThumbnail.src = "https://via.placeholder.com/300x180.png?text=Video+Thumbnail";  // Placeholder thumbnail
+
+                const videoTitle = document.createElement("h3");
+                videoTitle.textContent = video.title;
+
+                const videoButton = document.createElement("button");
+                videoButton.textContent = "Watch Video";
+                videoButton.onclick = () => playVideo(video);
+
+                videoCard.appendChild(videoThumbnail);
+                videoCard.appendChild(videoTitle);
+                videoCard.appendChild(videoButton);
+
                 resultsDiv.appendChild(videoCard);
             });
         }
 
-        function openFullscreen(videoId, title, channel) {
-            currentVideoId = videoId;
-            currentVideoDetails = { title, channel };
-            document.getElementById('fullscreenIframe').src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
-            document.getElementById('fullscreenOverlay').style.display = 'flex';
+        function playVideo(video) {
+            currentVideo = video;
+            document.getElementById("videoElement").src = video.videoUrl;
+            document.getElementById("videoPlayerTitle").textContent = video.title;
+            document.getElementById("videoPlayer").style.display = 'block';
+            document.getElementById("viewCount").textContent = video.views;
         }
 
-        function closeFullscreen() {
-            document.getElementById('fullscreenOverlay').style.display = 'none';
-            document.getElementById('fullscreenIframe').src = '';
+        function likeVideo() {
+            currentVideo.likes++;
+            alert("Liked!");
         }
 
-        function saveLike() {
-            let likes = JSON.parse(localStorage.getItem('likes')) || [];
-            if (!likes.includes(currentVideoId)) {
-                likes.push(currentVideoId);
-                localStorage.setItem('likes', JSON.stringify(likes));
-            }
+        function dislikeVideo() {
+            currentVideo.dislikes++;
+            alert("Disliked!");
         }
 
-        function saveSubscribe() {
-            let subscriptions = JSON.parse(localStorage.getItem('subscriptions')) || [];
-            if (!subscriptions.includes(currentVideoDetails.channel)) {
-                subscriptions.push(currentVideoDetails.channel);
-                localStorage.setItem('subscriptions', JSON.stringify(subscriptions));
-            }
+        function saveVideo() {
+            currentVideo.saved = !currentVideo.saved;
+            alert(currentVideo.saved ? "Saved!" : "Removed from Saved!");
         }
-
-        document.getElementById('searchButton').addEventListener('click', () => {
-            let query = document.getElementById('searchInput').value;
-            if (query) searchVideos(query);
-            else alert('Please enter a search term');
-        });
-
-        document.getElementById('authButton').addEventListener('click', authenticate);
-        document.getElementById('closeFullscreen').addEventListener('click', closeFullscreen);
-
-        window.onload = function() {
-            gapi.load('client', loadClient);
-            gapi.load('client:auth2', loadAuthClient);
-            displaySearchHistory();
-        };
     </script>
 </body>
 </html>
