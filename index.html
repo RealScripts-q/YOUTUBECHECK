@@ -44,6 +44,26 @@
         .dropdown:hover .dropdown-content {
             display: block;
         }
+        .video-actions button {
+            margin: 5px;
+        }
+        .fullscreen-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            display: none;
+        }
+        .fullscreen-overlay iframe {
+            width: 80%;
+            height: 80%;
+        }
     </style>
 </head>
 <body>
@@ -71,10 +91,24 @@
 
     <div id="videoResults" class="flex flex-wrap justify-center"></div>
 
+    <!-- Fullscreen Overlay -->
+    <div id="fullscreenOverlay" class="fullscreen-overlay">
+        <div class="video-actions text-white text-center">
+            <button id="likeButton" class="bg-red-500 px-4 py-2 rounded">❤️ Like</button>
+            <button id="dislikeButton" class="bg-gray-500 px-4 py-2 rounded">👎 Dislike</button>
+            <button id="favoriteButton" class="bg-yellow-500 px-4 py-2 rounded">⭐ Favorite</button>
+            <button id="shareButton" class="bg-blue-500 px-4 py-2 rounded">🔗 Share</button>
+            <button id="closeFullscreen" class="bg-black px-4 py-2 rounded">Close</button>
+        </div>
+        <iframe id="fullscreenIframe" frameborder="0"></iframe>
+    </div>
+
     <script>
         const CLIENT_ID = '331493991112-21mn48kmoh03g97gtofdse373tt8issf.apps.googleusercontent.com';
         const API_KEY = 'AIzaSyDwWtyo-Ks4SWjxDGMVAoFpgtP_FvJdrBU';
         const SCOPES = 'https://www.googleapis.com/auth/youtube.upload';
+
+        let currentVideoId = '';
         
         function loadClient() {
             gapi.client.setApiKey(API_KEY);
@@ -137,7 +171,7 @@
                 
                 let iframe = document.createElement('iframe');
                 iframe.src = `https://www.youtube.com/embed/${video.id.videoId}`;
-                iframe.onclick = () => saveWatchHistory({ id: video.id.videoId, title: video.snippet.title });
+                iframe.onclick = () => openFullscreen(video.id.videoId);
                 
                 let title = document.createElement('h3');
                 title.textContent = video.snippet.title;
@@ -149,6 +183,46 @@
             });
         }
 
+        function openFullscreen(videoId) {
+            currentVideoId = videoId;
+            document.getElementById('fullscreenIframe').src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+            document.getElementById('fullscreenOverlay').style.display = 'flex';
+        }
+
+        function closeFullscreen() {
+            document.getElementById('fullscreenOverlay').style.display = 'none';
+            document.getElementById('fullscreenIframe').src = '';
+        }
+
+        function saveLike() {
+            let likes = JSON.parse(localStorage.getItem('likes')) || [];
+            if (!likes.includes(currentVideoId)) {
+                likes.push(currentVideoId);
+                localStorage.setItem('likes', JSON.stringify(likes));
+            }
+        }
+
+        function saveDislike() {
+            let dislikes = JSON.parse(localStorage.getItem('dislikes')) || [];
+            if (!dislikes.includes(currentVideoId)) {
+                dislikes.push(currentVideoId);
+                localStorage.setItem('dislikes', JSON.stringify(dislikes));
+            }
+        }
+
+        function saveFavorite() {
+            let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+            if (!favorites.includes(currentVideoId)) {
+                favorites.push(currentVideoId);
+                localStorage.setItem('favorites', JSON.stringify(favorites));
+            }
+        }
+
+        function shareVideo() {
+            const videoUrl = `https://www.youtube.com/watch?v=${currentVideoId}`;
+            prompt("Copy this link to share the video:", videoUrl);
+        }
+
         document.getElementById('searchButton').addEventListener('click', () => {
             let query = document.getElementById('searchInput').value;
             if (query) searchVideos(query);
@@ -156,6 +230,11 @@
         });
 
         document.getElementById('authButton').addEventListener('click', authenticate);
+        document.getElementById('closeFullscreen').addEventListener('click', closeFullscreen);
+        document.getElementById('likeButton').addEventListener('click', saveLike);
+        document.getElementById('dislikeButton').addEventListener('click', saveDislike);
+        document.getElementById('favoriteButton').addEventListener('click', saveFavorite);
+        document.getElementById('shareButton').addEventListener('click', shareVideo);
         
         window.onload = function() {
             gapi.load('client', loadClient);
