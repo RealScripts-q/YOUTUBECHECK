@@ -12,241 +12,150 @@
         }
 
         .container {
-            width: 100%;
             max-width: 1200px;
             margin: auto;
             text-align: center;
             padding: 20px;
         }
 
-        .form-container, .video-upload {
-            background-color: #282828;
-            padding: 20px;
+        .video-card {
+            position: relative;
+            display: inline-block;
+            margin: 10px;
+            cursor: pointer;
+        }
+
+        .video-thumbnail {
+            width: 300px;
+            height: 180px;
             border-radius: 10px;
-            width: 400px;
-            margin: auto;
+            object-fit: cover;
+        }
+
+        .play-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 50%;
+            font-size: 24px;
+            color: white;
             display: none;
         }
 
-        input, textarea, select {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
-            background-color: #333;
-            color: white;
-            border: 1px solid #555;
+        .video-card:hover .play-button {
+            display: block;
         }
 
-        input[type="file"] {
-            background-color: transparent;
-            border: none;
+        #videoPlayerContainer {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: black;
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 1000;
+            text-align: center;
         }
 
-        button {
-            background-color: #3b82f6;
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            width: 100%;
-            cursor: pointer;
-            transition: 0.3s;
-            border: none;
-        }
-
-        button:hover {
-            background-color: #2563eb;
-        }
-
-        .channel-info {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 20px 0;
-        }
-
-        .channel-info img {
-            border-radius: 50%;
-            width: 100px;
-            height: 100px;
-            margin-right: 10px;
-            border: 2px solid white;
-        }
-
-        .video-section {
-            text-align: left;
-            margin: auto;
-            max-width: 600px;
-        }
-
-        .video-card {
-            background-color: #333;
-            padding: 10px;
-            margin: 10px 0;
+        #videoPlayer {
+            width: 600px;
+            height: 340px;
             border-radius: 10px;
         }
 
-        .video-card img {
-            width: 100%;
+        #closeButton {
+            background-color: red;
+            color: white;
+            padding: 10px;
+            margin-top: 10px;
             border-radius: 5px;
-        }
-
-        .file-label {
-            display: block;
-            text-align: left;
-            margin: 10px 0 5px;
-            font-weight: bold;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>Welcome to realTube</h1>
-            <button onclick="toggleChannelForm()">Create Channel</button>
-            <button onclick="viewYourChannel()">View Your Channel</button>
-            <select id="switchChannelDropdown" onchange="switchChannel()">
-                <option value="">Switch Channel</option>
-            </select>
-        </header>
+        <h1>Welcome to realTube</h1>
+        <h2>Your Videos</h2>
+        <div id="uploadedVideos"></div>
+    </div>
 
-        <div class="form-container" id="channelForm">
-            <h2>Create Your Channel</h2>
-            <input type="text" id="channelName" placeholder="Channel Name" onkeyup="checkChannelNameAvailability()">
-            <span id="nameStatus" style="color: red;"></span><br>
-            
-            <label class="file-label">Profile Picture:</label>
-            <input type="file" id="profilePicture" accept="image/*">
-
-            <textarea id="bio" placeholder="Write your bio..."></textarea>
-            <button onclick="createChannel()">Create Channel</button>
-        </div>
-
-        <div id="channelView" style="display:none;">
-            <h2>Your Channel</h2>
-            <div class="channel-info">
-                <img id="channelPFP" src="" alt="Profile Picture">
-                <div>
-                    <h3 id="channelNameView"></h3>
-                    <p id="channelBio"></p>
-                    <p>Subscribers: <span id="subscriberCount">0</span></p>
-                    <button id="subscribeButton" onclick="toggleSubscribe()">Subscribe</button>
-                </div>
-            </div>
-            <button id="manageVideosButton" onclick="toggleVideoUpload()">Manage / Upload Videos</button>
-
-            <div class="video-upload" id="videoUpload">
-                <h3>Upload Video</h3>
-                <input type="text" id="videoTitle" placeholder="Video Title">
-                <textarea id="videoDesc" placeholder="Description"></textarea>
-
-                <label class="file-label">Thumbnail (Image Only):</label>
-                <input type="file" id="thumbnailFile" accept="image/*">
-
-                <label class="file-label">Video File (MP4 Only):</label>
-                <input type="file" id="videoFile" accept="video/mp4">
-                
-                <select id="visibility">
-                    <option value="public">Public</option>
-                    <option value="private">Private</option>
-                    <option value="scheduled">Scheduled</option>
-                </select>
-                <button onclick="uploadVideo()">Upload</button>
-            </div>
-
-            <h3>Your Videos</h3>
-            <div id="uploadedVideos"></div>
-        </div>
+    <!-- Video Player Modal -->
+    <div id="videoPlayerContainer">
+        <video id="videoPlayer" controls></video>
+        <p>Views: <span id="viewCount">0</span></p>
+        <button id="closeButton" onclick="closeVideo()">Close</button>
     </div>
 
     <script>
-        let channels = [];
-        let loggedInChannel = null;
+        let loggedInChannel = {
+            name: "My Channel",
+            videos: [
+                {
+                    title: "My First Video",
+                    thumbnail: "https://via.placeholder.com/300x180",
+                    file: "video.mp4",
+                    views: 0
+                }
+            ]
+        };
 
-        function checkChannelNameAvailability() {
-            const channelName = document.getElementById("channelName").value;
-            const nameStatus = document.getElementById("nameStatus");
-            const exists = channels.some(channel => channel.name.toLowerCase() === channelName.toLowerCase());
+        function displayVideos() {
+            const videoContainer = document.getElementById("uploadedVideos");
+            videoContainer.innerHTML = "";
 
-            if (exists) {
-                nameStatus.textContent = "This name is already taken!";
-                nameStatus.style.color = "red";
-            } else {
-                nameStatus.textContent = "This name is available!";
-                nameStatus.style.color = "green";
-            }
-        }
+            loggedInChannel.videos.forEach((video, index) => {
+                let videoCard = document.createElement("div");
+                videoCard.classList.add("video-card");
 
-        function toggleChannelForm() {
-            document.getElementById("channelForm").style.display = 'block';
-        }
+                let thumbnail = document.createElement("img");
+                thumbnail.src = video.thumbnail;
+                thumbnail.classList.add("video-thumbnail");
 
-        function createChannel() {
-            const channelName = document.getElementById("channelName").value;
-            const bio = document.getElementById("bio").value;
-            const profilePictureInput = document.getElementById("profilePicture").files[0];
+                let playButton = document.createElement("div");
+                playButton.classList.add("play-button");
+                playButton.innerHTML = "▶";
 
-            if (!channelName) {
-                alert("Channel name is required!");
-                return;
-            }
+                videoCard.appendChild(thumbnail);
+                videoCard.appendChild(playButton);
+                videoCard.onclick = () => playVideo(index);
 
-            const profilePicture = profilePictureInput ? URL.createObjectURL(profilePictureInput) : "https://via.placeholder.com/100";
-
-            const newChannel = {
-                id: Date.now().toString(),
-                name: channelName,
-                bio: bio,
-                profilePicture: profilePicture,
-                subscribers: 0,
-                videos: []
-            };
-
-            channels.push(newChannel);
-            loggedInChannel = newChannel;
-            updateChannelDropdown();
-            document.getElementById("channelForm").style.display = "none";
-            viewYourChannel();
-        }
-
-        function updateChannelDropdown() {
-            const dropdown = document.getElementById("switchChannelDropdown");
-            dropdown.innerHTML = '<option value="">Switch Channel</option>';
-
-            channels.forEach(channel => {
-                const option = document.createElement("option");
-                option.value = channel.id;
-                option.textContent = channel.name;
-                dropdown.appendChild(option);
+                videoContainer.appendChild(videoCard);
             });
         }
 
-        function viewYourChannel() {
-            if (!loggedInChannel) {
-                alert("Create or switch to a channel first!");
-                return;
-            }
+        let currentVideoIndex = null;
+        let viewInterval = null;
 
-            document.getElementById("channelView").style.display = "block";
-            document.getElementById("channelNameView").textContent = loggedInChannel.name;
-            document.getElementById("channelBio").textContent = loggedInChannel.bio;
-            document.getElementById("channelPFP").src = loggedInChannel.profilePicture;
-            document.getElementById("subscriberCount").textContent = loggedInChannel.subscribers;
+        function playVideo(index) {
+            currentVideoIndex = index;
+            const videoData = loggedInChannel.videos[index];
+
+            document.getElementById("videoPlayer").src = videoData.file;
+            document.getElementById("viewCount").textContent = videoData.views;
+            document.getElementById("videoPlayerContainer").style.display = "block";
+
+            let videoElement = document.getElementById("videoPlayer");
+            videoElement.play();
+
+            viewInterval = setInterval(() => {
+                loggedInChannel.videos[index].views += 1;
+                document.getElementById("viewCount").textContent = loggedInChannel.videos[index].views;
+            }, 1000);
         }
 
-        function toggleVideoUpload() {
-            document.getElementById("videoUpload").style.display = 'block';
+        function closeVideo() {
+            document.getElementById("videoPlayerContainer").style.display = "none";
+            document.getElementById("videoPlayer").pause();
+            clearInterval(viewInterval);
         }
 
-        function uploadVideo() {
-            const title = document.getElementById("videoTitle").value;
-            const description = document.getElementById("videoDesc").value;
-            const thumbnail = document.getElementById("thumbnailFile").files[0] ? URL.createObjectURL(document.getElementById("thumbnailFile").files[0]) : "";
-            const visibility = document.getElementById("visibility").value;
-
-            loggedInChannel.videos.push({ title, description, thumbnail, visibility });
-            viewYourChannel();
-        }
+        displayVideos();
     </script>
 </body>
 </html>
