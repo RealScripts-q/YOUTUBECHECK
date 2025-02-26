@@ -47,6 +47,9 @@
         .video-actions button {
             margin: 5px;
         }
+        .video-actions {
+            text-align: center;
+        }
         .fullscreen-overlay {
             position: fixed;
             top: 0;
@@ -70,23 +73,11 @@
     <div class="container text-center p-4">
         <h1 class="text-3xl font-bold mb-4">Welcome to realTube</h1>
         <div class="flex justify-center mb-4">
-            <input type="text" id="searchInput" placeholder="Search YouTube Videos" class="p-2 w-1/2 rounded text-black">
+            <input type="text" id="searchInput" placeholder="Search Videos" class="p-2 w-1/2 rounded text-black">
             <button id="searchButton" class="bg-blue-500 text-white px-4 py-2 ml-2 rounded">Search</button>
         </div>
         <button id="authButton" class="bg-yellow-500 px-4 py-2 rounded">Sign in with Google</button>
         <button id="uploadButton" class="bg-green-500 px-4 py-2 rounded">Upload Video</button>
-    </div>
-
-    <div class="container p-4">
-        <div class="dropdown">
-            <button class="bg-gray-700 px-4 py-2 rounded">History</button>
-            <div class="dropdown-content p-2">
-                <h2 class="text-lg font-semibold">Search History</h2>
-                <ul id="searchHistory" class="text-gray-400"></ul>
-                <h2 class="text-lg font-semibold mt-2">Watch History</h2>
-                <ul id="watchHistory" class="text-gray-400"></ul>
-            </div>
-        </div>
     </div>
 
     <div id="videoResults" class="flex flex-wrap justify-center"></div>
@@ -104,12 +95,13 @@
     </div>
 
     <script>
-        const CLIENT_ID = '331493991112-21mn48kmoh03g97gtofdse373tt8issf.apps.googleusercontent.com';
-        const API_KEY = 'AIzaSyDwWtyo-Ks4SWjxDGMVAoFpgtP_FvJdrBU';
+        const CLIENT_ID = 'YOUR_CLIENT_ID';
+        const API_KEY = 'YOUR_API_KEY';
         const SCOPES = 'https://www.googleapis.com/auth/youtube.upload';
 
         let currentVideoId = '';
-        
+        let currentVideoDetails = {};
+
         function loadClient() {
             gapi.client.setApiKey(API_KEY);
             return gapi.client.load("https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest");
@@ -171,20 +163,29 @@
                 
                 let iframe = document.createElement('iframe');
                 iframe.src = `https://www.youtube.com/embed/${video.id.videoId}`;
-                iframe.onclick = () => openFullscreen(video.id.videoId);
+                iframe.onclick = () => openFullscreen(video.id.videoId, video.snippet.title, video.snippet.channelTitle);
                 
                 let title = document.createElement('h3');
                 title.textContent = video.snippet.title;
                 title.className = 'text-lg font-bold mt-2';
                 
+                let videoActions = document.createElement('div');
+                videoActions.className = 'video-actions';
+                videoActions.innerHTML = `
+                    <button class="bg-red-500 px-4 py-2 rounded">Like</button>
+                    <button class="bg-blue-500 px-4 py-2 rounded">Subscribe</button>
+                `;
+                
                 videoCard.appendChild(iframe);
                 videoCard.appendChild(title);
+                videoCard.appendChild(videoActions);
                 resultsDiv.appendChild(videoCard);
             });
         }
 
-        function openFullscreen(videoId) {
+        function openFullscreen(videoId, title, channel) {
             currentVideoId = videoId;
+            currentVideoDetails = { title, channel };
             document.getElementById('fullscreenIframe').src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
             document.getElementById('fullscreenOverlay').style.display = 'flex';
         }
@@ -202,25 +203,12 @@
             }
         }
 
-        function saveDislike() {
-            let dislikes = JSON.parse(localStorage.getItem('dislikes')) || [];
-            if (!dislikes.includes(currentVideoId)) {
-                dislikes.push(currentVideoId);
-                localStorage.setItem('dislikes', JSON.stringify(dislikes));
+        function saveSubscribe() {
+            let subscriptions = JSON.parse(localStorage.getItem('subscriptions')) || [];
+            if (!subscriptions.includes(currentVideoDetails.channel)) {
+                subscriptions.push(currentVideoDetails.channel);
+                localStorage.setItem('subscriptions', JSON.stringify(subscriptions));
             }
-        }
-
-        function saveFavorite() {
-            let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
-            if (!favorites.includes(currentVideoId)) {
-                favorites.push(currentVideoId);
-                localStorage.setItem('favorites', JSON.stringify(favorites));
-            }
-        }
-
-        function shareVideo() {
-            const videoUrl = `https://www.youtube.com/watch?v=${currentVideoId}`;
-            prompt("Copy this link to share the video:", videoUrl);
         }
 
         document.getElementById('searchButton').addEventListener('click', () => {
@@ -231,11 +219,7 @@
 
         document.getElementById('authButton').addEventListener('click', authenticate);
         document.getElementById('closeFullscreen').addEventListener('click', closeFullscreen);
-        document.getElementById('likeButton').addEventListener('click', saveLike);
-        document.getElementById('dislikeButton').addEventListener('click', saveDislike);
-        document.getElementById('favoriteButton').addEventListener('click', saveFavorite);
-        document.getElementById('shareButton').addEventListener('click', shareVideo);
-        
+
         window.onload = function() {
             gapi.load('client', loadClient);
             gapi.load('client:auth2', loadAuthClient);
