@@ -18,18 +18,65 @@
             padding: 20px;
         }
 
-        .video-card {
-            position: relative;
-            display: inline-block;
-            margin: 10px;
-            cursor: pointer;
+        .form-container, .video-upload {
+            background-color: #282828;
+            padding: 20px;
+            border-radius: 10px;
+            width: 400px;
+            margin: auto;
+            display: none;
         }
 
-        .video-thumbnail {
-            width: 300px;
-            height: 180px;
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            background-color: #333;
+            color: white;
+            border: 1px solid #555;
+        }
+
+        button {
+            background-color: #3b82f6;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            width: 100%;
+            cursor: pointer;
+            transition: 0.3s;
+            border: none;
+        }
+
+        button:hover {
+            background-color: #2563eb;
+        }
+
+        .channel-info {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .channel-info img {
+            border-radius: 50%;
+            width: 100px;
+            height: 100px;
+            margin-right: 10px;
+            border: 2px solid white;
+        }
+
+        .video-card {
+            background-color: #333;
+            padding: 10px;
+            margin: 10px 0;
             border-radius: 10px;
-            object-fit: cover;
+        }
+
+        .video-card img {
+            width: 100%;
+            border-radius: 5px;
         }
 
         .play-button {
@@ -61,177 +108,76 @@
             z-index: 1000;
             text-align: center;
         }
-
-        #videoPlayer {
-            width: 600px;
-            height: 340px;
-            border-radius: 10px;
-        }
-
-        #closeButton {
-            background-color: red;
-            color: white;
-            padding: 10px;
-            margin-top: 10px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        #createChannelContainer {
-            display: block;
-            background: #282828;
-            padding: 20px;
-            border-radius: 10px;
-            margin: 20px auto;
-            width: 300px;
-        }
-
-        #channelDashboard {
-            display: none;
-        }
-
-        .video-actions {
-            margin-top: 10px;
-        }
-
-        .comment-section {
-            margin-top: 20px;
-            text-align: left;
-            padding: 10px;
-            border-top: 1px solid gray;
-        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Welcome to realTube</h1>
+        <header>
+            <h1>Welcome to realTube</h1>
+            <button onclick="toggleChannelForm()">Create Channel</button>
+            <button onclick="viewYourChannel()">View Your Channel</button>
+        </header>
 
-        <!-- Create Channel -->
-        <div id="createChannelContainer">
+        <div class="form-container" id="channelForm">
             <h2>Create Your Channel</h2>
-            <input type="text" id="channelName" placeholder="Enter channel name">
-            <button onclick="createChannel()">Create</button>
+            <input type="text" id="channelName" placeholder="Channel Name" onkeyup="checkChannelNameAvailability()">
+            <span id="nameStatus" style="color: red;"></span><br>
+            <label>Profile Picture:</label>
+            <input type="file" id="profilePicture" accept="image/*">
+            <textarea id="bio" placeholder="Write your bio..."></textarea>
+            <button onclick="createChannel()">Create Channel</button>
         </div>
 
-        <!-- Channel Dashboard -->
-        <div id="channelDashboard">
-            <h2 id="channelTitle"></h2>
-            <img id="channelPfp" src="https://via.placeholder.com/100" width="100">
-            <p>Subscribers: <span id="subCount">0</span></p>
-            <button onclick="switchChannel()">Switch Channel</button>
-            <button onclick="uploadVideoForm()">Upload Video</button>
+        <div id="channelView" style="display:none;">
+            <h2>Your Channel</h2>
+            <div class="channel-info">
+                <img id="channelPFP" src="" alt="Profile Picture">
+                <div>
+                    <h3 id="channelNameView"></h3>
+                    <p id="channelBio"></p>
+                    <p>Subscribers: <span id="subscriberCount">0</span></p>
+                    <button id="subscribeButton" onclick="toggleSubscribe()">Subscribe</button>
+                </div>
+            </div>
+            <button onclick="toggleVideoUpload()">Manage / Upload Videos</button>
         </div>
-
-        <!-- Video Upload -->
-        <div id="uploadForm" style="display:none;">
-            <h2>Upload Video</h2>
-            <input type="text" id="videoTitle" placeholder="Video Title"><br>
-            <input type="file" id="videoFile" accept="video/mp4"><br>
-            <input type="file" id="thumbnailFile" accept="image/*"><br>
-            <select id="visibility">
-                <option value="public">Public</option>
-                <option value="private">Private</option>
-                <option value="scheduled">Scheduled</option>
-            </select>
-            <button onclick="uploadVideo()">Upload</button>
-        </div>
-
-        <h2>Your Videos</h2>
-        <div id="uploadedVideos"></div>
-    </div>
-
-    <!-- Video Player Modal -->
-    <div id="videoPlayerContainer">
-        <video id="videoPlayer" controls></video>
-        <p>Views: <span id="viewCount">0</span></p>
-        <div class="video-actions">
-            <button id="likeButton">👍 Like (<span id="likeCount">0</span>)</button>
-            <button id="dislikeButton">👎 Dislike (<span id="dislikeCount">0</span>)</button>
-        </div>
-        <div class="comment-section">
-            <h3>Comments</h3>
-            <input type="text" id="commentInput" placeholder="Add a comment">
-            <button onclick="addComment()">Post</button>
-            <ul id="commentList"></ul>
-        </div>
-        <button id="closeButton" onclick="closeVideo()">Close</button>
     </div>
 
     <script>
-        let channels = JSON.parse(localStorage.getItem("channels")) || [];
-        let currentChannelIndex = localStorage.getItem("currentChannelIndex") || null;
-        let viewedVideos = new Set();
+        let channels = [];
+        let loggedInChannel = null;
+
+        function checkChannelNameAvailability() {
+            const channelName = document.getElementById("channelName").value;
+            const nameStatus = document.getElementById("nameStatus");
+            const exists = channels.some(channel => channel.name.toLowerCase() === channelName.toLowerCase());
+            nameStatus.textContent = exists ? "This name is already taken!" : "This name is available!";
+            nameStatus.style.color = exists ? "red" : "green";
+        }
+
+        function toggleChannelForm() {
+            document.getElementById("channelForm").style.display = 'block';
+        }
 
         function createChannel() {
-            let name = document.getElementById("channelName").value;
-            if (!name) return alert("Please enter a channel name!");
-            if (channels.some(c => c.name === name)) return alert("Channel name already exists!");
-
-            let newChannel = { 
-                name, 
-                subscribers: 0, 
-                videos: [], 
-                profilePicture: "https://via.placeholder.com/100" 
-            };
-
+            const channelName = document.getElementById("channelName").value;
+            const bio = document.getElementById("bio").value;
+            const profilePictureInput = document.getElementById("profilePicture").files[0];
+            if (!channelName) return alert("Channel name is required!");
+            const profilePicture = profilePictureInput ? URL.createObjectURL(profilePictureInput) : "https://via.placeholder.com/100";
+            const newChannel = { name: channelName, bio: bio, profilePicture: profilePicture, subscribers: 0, videos: [] };
             channels.push(newChannel);
-            localStorage.setItem("channels", JSON.stringify(channels));
-            switchToChannel(channels.length - 1);
+            loggedInChannel = newChannel;
+            viewYourChannel();
         }
 
-        function switchChannel() {
-            let newIndex = prompt("Enter channel name:");
-            let index = channels.findIndex(c => c.name === newIndex);
-            if (index === -1) return alert("Channel not found!");
-            switchToChannel(index);
-        }
-
-        function switchToChannel(index) {
-            currentChannelIndex = index;
-            localStorage.setItem("currentChannelIndex", index);
-            document.getElementById("createChannelContainer").style.display = "none";
-            document.getElementById("channelDashboard").style.display = "block";
-            let channel = channels[index];
-            document.getElementById("channelTitle").textContent = channel.name;
-            document.getElementById("channelPfp").src = channel.profilePicture;
-            document.getElementById("subCount").textContent = channel.subscribers;
-            displayVideos();
-        }
-
-        function uploadVideoForm() {
-            document.getElementById("uploadForm").style.display = "block";
-        }
-
-        function uploadVideo() {
-            let title = document.getElementById("videoTitle").value;
-            let file = document.getElementById("videoFile").files[0];
-            let thumb = document.getElementById("thumbnailFile").files[0];
-            let visibility = document.getElementById("visibility").value;
-
-            if (!title || !file || !thumb) return alert("Please fill all fields!");
-
-            let video = { title, file: URL.createObjectURL(file), thumbnail: URL.createObjectURL(thumb), views: 0, visibility, likes: 0, dislikes: 0, comments: [] };
-
-            channels[currentChannelIndex].videos.push(video);
-            localStorage.setItem("channels", JSON.stringify(channels));
-            displayVideos();
-        }
-
-        function playVideo(index) {
-            let video = channels[currentChannelIndex].videos[index];
-
-            if (!viewedVideos.has(index)) {
-                video.views++;
-                viewedVideos.add(index);
-            }
-
-            document.getElementById("videoPlayer").src = video.file;
-            document.getElementById("viewCount").textContent = video.views;
-            document.getElementById("videoPlayerContainer").style.display = "block";
-        }
-
-        function closeVideo() {
-            document.getElementById("videoPlayerContainer").style.display = "none";
+        function viewYourChannel() {
+            if (!loggedInChannel) return alert("Create or switch to a channel first!");
+            document.getElementById("channelView").style.display = "block";
+            document.getElementById("channelNameView").textContent = loggedInChannel.name;
+            document.getElementById("channelBio").textContent = loggedInChannel.bio;
+            document.getElementById("channelPFP").src = loggedInChannel.profilePicture;
+            document.getElementById("subscriberCount").textContent = loggedInChannel.subscribers;
         }
     </script>
 </body>
