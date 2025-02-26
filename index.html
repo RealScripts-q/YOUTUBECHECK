@@ -3,94 +3,152 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Video to YouTube</title>
-</head>
-<body>
-    <h1>Upload a Video to YouTube</h1>
-    <input type="file" id="fileInput" accept="video/*" />
-    <br>
-    <label for="titleInput">Title:</label>
-    <input type="text" id="titleInput" placeholder="Enter video title" />
-    <br>
-    <label for="descriptionInput">Description:</label>
-    <textarea id="descriptionInput" placeholder="Enter video description"></textarea>
-    <br>
-    <button id="uploadButton">Upload Video</button>
-    
+    <title>realTube - Custom YouTube</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://apis.google.com/js/api.js"></script>
+</head>
+<body class="bg-gray-900 text-white font-sans">
+    <div class="container mx-auto p-4 text-center">
+        <h1 class="text-3xl font-bold mb-4">Welcome to realTube</h1>
+        <div class="flex justify-center mb-4">
+            <input type="text" id="searchInput" placeholder="Search YouTube Videos" 
+                class="p-2 w-1/2 rounded text-black">
+            <button id="searchButton" class="bg-blue-500 text-white px-4 py-2 ml-2 rounded">Search</button>
+        </div>
+        <button id="authButton" class="bg-yellow-500 px-4 py-2 rounded">Sign in with Google</button>
+        <button id="uploadButton" class="bg-green-500 px-4 py-2 rounded">Upload Video</button>
+    </div>
+
+    <div class="container mx-auto p-4">
+        <h2 class="text-xl font-semibold">Search History</h2>
+        <ul id="searchHistory" class="text-gray-400"></ul>
+    </div>
+
+    <div id="videoResults" class="flex flex-wrap justify-center"></div>
+    
+    <div class="container mx-auto p-4">
+        <h2 class="text-xl font-semibold">Watch History</h2>
+        <ul id="watchHistory" class="text-gray-400"></ul>
+    </div>
+
     <script>
-        var CLIENT_ID = '331493991112-aslekbm8rg01gcfqv4fja3rb38gi4gte.apps.googleusercontent.com';  // Your OAuth Client ID
-        var API_KEY = 'AIzaSyDwWtyo-Ks4SWjxDGMVAoFpgtP_FvJdrBU'; // Your API key
-        var SCOPE = 'https://www.googleapis.com/auth/youtube.upload';
+        const CLIENT_ID = '331493991112-aslekbm8rg01gcfqv4fja3rb38gi4gte.apps.googleusercontent.com';
+        const API_KEY = 'YOUR_API_KEY_HERE'; // Replace with a valid YouTube API key
+        const SCOPES = 'https://www.googleapis.com/auth/youtube.upload';
         
-        var videoFile;
-        
-        document.getElementById('fileInput').addEventListener('change', function(event) {
-            videoFile = event.target.files[0];
-        });
-
-        function authenticate() {
-            return gapi.auth2.getAuthInstance().signIn();
-        }
-
         function loadClient() {
             gapi.client.setApiKey(API_KEY);
-            return gapi.client.load('https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest');
+            return gapi.client.load("https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest");
         }
 
-        function uploadVideo() {
-            if (!videoFile) {
-                alert("Please select a video file.");
-                return;
+        function authenticate() {
+            return gapi.auth2.getAuthInstance()
+                .signIn()
+                .then(() => console.log("Sign-in successful"),
+                      err => console.error("Error signing in", err));
+        }
+
+        function loadAuthClient() {
+            gapi.load('client:auth2', () => {
+                gapi.auth2.init({client_id: CLIENT_ID});
+            });
+        }
+
+        function saveSearchHistory(query) {
+            let history = JSON.parse(localStorage.getItem('searchHistory')) || [];
+            if (!history.includes(query)) {
+                history.unshift(query);
+                localStorage.setItem('searchHistory', JSON.stringify(history));
             }
+            displaySearchHistory();
+        }
 
-            var title = document.getElementById('titleInput').value || videoFile.name; // Default to filename if no title
-            var description = document.getElementById('descriptionInput').value || 'Uploaded via YouTube API'; // Default description
-            
-            var metadata = {
-                snippet: {
-                    title: title,
-                    description: description
-                },
-                status: {
-                    privacyStatus: 'public', // Public video
-                    madeForKids: false // Set "Made for Kids" to false
-                }
-            };
-
-            var request = gapi.client.youtube.videos.insert({
-                part: 'snippet,status',
-                media: {
-                    body: videoFile
-                },
-                resource: metadata
-            });
-
-            request.execute(function(response) {
-                if (response.error) {
-                    alert('Error: ' + response.error.message);
-                } else {
-                    // Redirect to the uploaded video URL
-                    var videoUrl = "https://www.youtube.com/watch?v=" + response.id;
-                    alert('Video uploaded successfully! Redirecting to the video...');
-                    window.location.href = videoUrl; // Redirect to the video link
-                }
+        function displaySearchHistory() {
+            const historyList = document.getElementById('searchHistory');
+            historyList.innerHTML = '';
+            const history = JSON.parse(localStorage.getItem('searchHistory')) || [];
+            history.forEach(query => {
+                let li = document.createElement('li');
+                li.textContent = query;
+                li.classList.add('cursor-pointer', 'hover:underline');
+                li.onclick = () => searchVideos(query);
+                historyList.appendChild(li);
             });
         }
 
-        document.getElementById('uploadButton').addEventListener('click', function() {
-            authenticate().then(loadClient).then(uploadVideo);
+        function saveWatchHistory(video) {
+            let history = JSON.parse(localStorage.getItem('watchHistory')) || [];
+            history.unshift(video);
+            localStorage.setItem('watchHistory', JSON.stringify(history));
+            displayWatchHistory();
+        }
+
+        function displayWatchHistory() {
+            const watchList = document.getElementById('watchHistory');
+            watchList.innerHTML = '';
+            const history = JSON.parse(localStorage.getItem('watchHistory')) || [];
+            history.forEach(video => {
+                let li = document.createElement('li');
+                li.innerHTML = `<a href="https://www.youtube.com/watch?v=${video.id}" target="_blank" class="text-blue-400">${video.title}</a>`;
+                watchList.appendChild(li);
+            });
+        }
+
+        function searchVideos(query) {
+            saveSearchHistory(query);
+            gapi.client.youtube.search.list({
+                part: 'snippet',
+                q: query,
+                type: 'video',
+                maxResults: 10
+            }).then(response => {
+                const videos = response.result.items;
+                displayVideos(videos);
+            }, error => alert('Error: ' + error.result.error.message));
+        }
+
+        function displayVideos(videos) {
+            const resultsDiv = document.getElementById('videoResults');
+            resultsDiv.innerHTML = '';
+            
+            videos.forEach(video => {
+                let videoCard = document.createElement('div');
+                videoCard.className = 'm-4 p-2 bg-gray-800 rounded w-80';
+                
+                let iframe = document.createElement('iframe');
+                iframe.src = `https://www.youtube.com/embed/${video.id.videoId}`;
+                iframe.className = 'w-full h-40 rounded';
+                iframe.onclick = () => saveWatchHistory({ id: video.id.videoId, title: video.snippet.title });
+                
+                let title = document.createElement('h3');
+                title.textContent = video.snippet.title;
+                title.className = 'text-lg font-bold mt-2';
+                
+                videoCard.appendChild(iframe);
+                videoCard.appendChild(title);
+                resultsDiv.appendChild(videoCard);
+            });
+        }
+
+        document.getElementById('searchButton').addEventListener('click', () => {
+            let query = document.getElementById('searchInput').value;
+            if (query) searchVideos(query);
+            else alert('Please enter a search term');
         });
 
-        // Load the Google API client and OAuth library
+        document.getElementById('authButton').addEventListener('click', authenticate);
+
+        document.getElementById('uploadButton').addEventListener('click', () => {
+            alert('To upload videos, ensure authentication is completed.');
+        });
+
         function init() {
-            gapi.load('client:auth2', function() {
-                gapi.auth2.init({
-                    client_id: CLIENT_ID
-                });
-            });
+            gapi.load('client', loadClient);
+            gapi.load('client:auth2', loadAuthClient);
+            displaySearchHistory();
+            displayWatchHistory();
         }
-        
+
         window.onload = init;
     </script>
 </body>
