@@ -5,10 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>realTube - Custom YouTube</title>
     <style>
+        /* Basic CSS styles */
         body {
             background-color: #181818;
             color: white;
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
         }
 
         .container {
@@ -18,84 +21,22 @@
             padding: 20px;
         }
 
-        .form-container, .video-upload {
-            background-color: #282828;
-            padding: 20px;
-            border-radius: 10px;
-            width: 400px;
-            margin: auto;
-            display: none;
-        }
-
-        input, textarea, select {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
-            background-color: #333;
-            color: white;
-            border: 1px solid #555;
-        }
-
-        button {
-            background-color: #3b82f6;
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            width: 100%;
-            cursor: pointer;
-            transition: 0.3s;
-            border: none;
-        }
-
-        button:hover {
-            background-color: #2563eb;
-        }
-
-        .channel-info {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 20px 0;
-        }
-
-        .channel-info img {
-            border-radius: 50%;
-            width: 100px;
-            height: 100px;
-            margin-right: 10px;
-            border: 2px solid white;
-        }
-
+        /* Video Card */
         .video-card {
-            background-color: #333;
-            padding: 10px;
-            margin: 10px 0;
+            position: relative;
+            display: inline-block;
+            margin: 10px;
+            cursor: pointer;
+        }
+
+        .video-thumbnail {
+            width: 300px;
+            height: 170px;
             border-radius: 10px;
+            object-fit: cover;
         }
 
-        .video-card img {
-            width: 100%;
-            border-radius: 5px;
-        }
-
-        .play-button {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px;
-            border-radius: 50%;
-            font-size: 24px;
-            color: white;
-            display: none;
-        }
-
-        .video-card:hover .play-button {
-            display: block;
-        }
-
+        /* Video Player */
         #videoPlayerContainer {
             display: none;
             position: fixed;
@@ -107,77 +48,417 @@
             border-radius: 10px;
             z-index: 1000;
             text-align: center;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        #videoPlayer {
+            width: 100%;
+            max-width: 750px;
+            height: 420px;
+            border-radius: 10px;
+        }
+
+        /* Buttons */
+        .button-group {
+            display: flex;
+            justify-content: center;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        .button-group button {
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+        }
+
+        .button-group button:hover {
+            background-color: #555;
+        }
+
+        .button-group .icon {
+            margin-right: 5px;
+        }
+
+        /* Comment Section */
+        .comment-section {
+            margin-top: 20px;
+            text-align: left;
+            max-width: 800px;
+            margin: auto;
+        }
+
+        .comment-box {
+            width: 100%;
+            height: 60px;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #333;
+            border: none;
+            color: white;
+            font-size: 14px;
+        }
+
+        .comments {
+            list-style: none;
+            padding-left: 0;
+            margin-top: 20px;
+        }
+
+        .comment {
+            background: #282828;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        /* Channel Creation and Video Upload */
+        .channel-creation, .video-upload {
+            margin-top: 20px;
+        }
+
+        .input-field {
+            margin-bottom: 10px;
+            padding: 10px;
+            width: 300px;
+        }
+
+        /* Hide Videos when Video Player is Active */
+        #uploadedVideos.hidden {
+            display: none;
+        }
+
+        /* Recommendations */
+        .recommendations {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .recommendations h3 {
+            margin-bottom: 20px;
+        }
+
+        .recommended-video-card {
+            display: inline-block;
+            margin: 10px;
+            text-align: center;
+        }
+
+        .recommended-video-thumbnail {
+            width: 250px;
+            height: 140px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        .recommended-video-title {
+            color: white;
+            margin-top: 10px;
+            max-width: 250px;
+            word-wrap: break-word;
+        }
+
+        /* Modal Close Button */
+        #closeButton {
+            background-color: red;
+            color: white;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .hidden {
+            display: none;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>Welcome to realTube</h1>
-            <button onclick="toggleChannelForm()">Create Channel</button>
-            <button onclick="viewYourChannel()">View Your Channel</button>
-        </header>
+        <h1>Welcome to realTube</h1>
 
-        <div class="form-container" id="channelForm">
-            <h2>Create Your Channel</h2>
-            <input type="text" id="channelName" placeholder="Channel Name" onkeyup="checkChannelNameAvailability()">
-            <span id="nameStatus" style="color: red;"></span><br>
-            <label>Profile Picture:</label>
-            <input type="file" id="profilePicture" accept="image/*">
-            <textarea id="bio" placeholder="Write your bio..."></textarea>
+        <!-- Channel Creation Section -->
+        <div class="channel-creation">
+            <h2>Create a Channel</h2>
+            <input id="channelName" type="text" class="input-field" placeholder="Channel Name">
+            <input id="channelDescription" type="text" class="input-field" placeholder="Channel Description">
             <button onclick="createChannel()">Create Channel</button>
         </div>
 
-        <div id="channelView" style="display:none;">
-            <h2>Your Channel</h2>
-            <div class="channel-info">
-                <img id="channelPFP" src="" alt="Profile Picture">
-                <div>
-                    <h3 id="channelNameView"></h3>
-                    <p id="channelBio"></p>
-                    <p>Subscribers: <span id="subscriberCount">0</span></p>
-                    <button id="subscribeButton" onclick="toggleSubscribe()">Subscribe</button>
-                </div>
-            </div>
-            <button onclick="toggleVideoUpload()">Manage / Upload Videos</button>
+        <!-- Video Upload Section (Hidden until channel is created) -->
+        <div class="video-upload hidden">
+            <h2>Upload a Video</h2>
+            <input id="videoTitle" type="text" class="input-field" placeholder="Video Title">
+            <input id="videoThumbnail" type="text" class="input-field" placeholder="Video Thumbnail URL">
+            <input id="videoFile" type="file" class="input-field">
+            <textarea id="videoDescription" class="input-field" placeholder="Video Description"></textarea>
+            <button onclick="uploadVideo()">Upload Video</button>
         </div>
+
+        <!-- Recommendations Section -->
+        <div class="recommendations">
+            <h3>Recommended Videos</h3>
+            <div id="recommendedVideos"></div>
+        </div>
+
+        <!-- Video Player Modal -->
+        <div id="videoPlayerContainer">
+            <video id="videoPlayer" controls></video>
+            <p>Views: <span id="viewCount">0</span></p>
+            <div class="button-group">
+                <button class="like" onclick="toggleLike()"><span class="icon">👍</span>Like</button>
+                <button class="dislike" onclick="toggleDislike()"><span class="icon">👎</span>Dislike</button>
+                <button class="share"><span class="icon">🔗</span>Share</button>
+                <button class="comment"><span class="icon">💬</span>Comment</button>
+            </div>
+            <div class="comment-section">
+                <textarea id="commentInput" class="comment-box" placeholder="Add a comment..."></textarea><br>
+                <button onclick="addComment()">Post Comment</button>
+                <ul id="commentList" class="comments"></ul>
+            </div>
+            <button id="backButton" onclick="closeVideo()">Back</button>
+            <button id="closeButton" onclick="closeVideo()">Close</button>
+        </div>
+
+        <h2>Your Videos</h2>
+        <div id="uploadedVideos" class="hidden"></div>
     </div>
 
     <script>
-        let channels = [];
-        let loggedInChannel = null;
+        let channels = JSON.parse(localStorage.getItem("channels")) || [];
+        let currentChannelIndex = localStorage.getItem("currentChannelIndex") || null;
+        let currentVideoIndex = null;
+        let liked = false;
+        let disliked = false;
 
-        function checkChannelNameAvailability() {
-            const channelName = document.getElementById("channelName").value;
-            const nameStatus = document.getElementById("nameStatus");
-            const exists = channels.some(channel => channel.name.toLowerCase() === channelName.toLowerCase());
-            nameStatus.textContent = exists ? "This name is already taken!" : "This name is available!";
-            nameStatus.style.color = exists ? "red" : "green";
+        // Generate a random alphanumeric string to be used as a unique video ID
+        function generateUniqueId() {
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let result = '';
+            for (let i = 0; i < 11; i++) {
+                result += characters.charAt(Math.floor(Math.random() * characters.length));
+            }
+            return result;
         }
 
-        function toggleChannelForm() {
-            document.getElementById("channelForm").style.display = 'block';
-        }
-
+        // Create a new channel
         function createChannel() {
-            const channelName = document.getElementById("channelName").value;
-            const bio = document.getElementById("bio").value;
-            const profilePictureInput = document.getElementById("profilePicture").files[0];
-            if (!channelName) return alert("Channel name is required!");
-            const profilePicture = profilePictureInput ? URL.createObjectURL(profilePictureInput) : "https://via.placeholder.com/100";
-            const newChannel = { name: channelName, bio: bio, profilePicture: profilePicture, subscribers: 0, videos: [] };
+            const channelName = document.getElementById('channelName').value;
+            const channelDescription = document.getElementById('channelDescription').value;
+
+            if (!channelName || !channelDescription) {
+                alert("Please provide a valid channel name and description.");
+                return;
+            }
+
+            const newChannel = {
+                name: channelName,
+                description: channelDescription,
+                videos: [],
+                subscribers: 0,
+            };
+
             channels.push(newChannel);
-            loggedInChannel = newChannel;
-            viewYourChannel();
+            localStorage.setItem("channels", JSON.stringify(channels));
+            alert(`Channel '${channelName}' created successfully!`);
+            localStorage.setItem("currentChannelIndex", channels.length - 1);
+            displayVideos();
+            displayRecommendations();
+            showVideoUploadSection(); // Show the upload section after channel creation
         }
 
-        function viewYourChannel() {
-            if (!loggedInChannel) return alert("Create or switch to a channel first!");
-            document.getElementById("channelView").style.display = "block";
-            document.getElementById("channelNameView").textContent = loggedInChannel.name;
-            document.getElementById("channelBio").textContent = loggedInChannel.bio;
-            document.getElementById("channelPFP").src = loggedInChannel.profilePicture;
-            document.getElementById("subscriberCount").textContent = loggedInChannel.subscribers;
+        // Upload a new video
+        function uploadVideo() {
+            const videoTitle = document.getElementById('videoTitle').value;
+            const videoThumbnail = document.getElementById('videoThumbnail').value;
+            const videoFile = document.getElementById('videoFile').files[0];
+            const videoDescription = document.getElementById('videoDescription').value;
+
+            if (!videoTitle || !videoThumbnail || !videoFile || !videoDescription) {
+                alert("Please fill out all fields to upload a video.");
+                return;
+            }
+
+            const videoUrl = URL.createObjectURL(videoFile);
+            const customUrl = generateUniqueId();  // Generate a unique ID for the video
+
+            const newVideo = {
+                title: videoTitle,
+                thumbnail: videoThumbnail,
+                file: videoUrl,
+                description: videoDescription,
+                views: 0,
+                likes: 0,
+                dislikes: 0,
+                comments: [],
+                customUrl: customUrl,  // Store the unique ID as the custom URL
+            };
+
+            if (channels.length === 0 || currentChannelIndex === null) {
+                alert("Please create a channel first.");
+                return;
+            }
+
+            channels[currentChannelIndex].videos.push(newVideo);
+            localStorage.setItem("channels", JSON.stringify(channels));
+            alert("Video uploaded successfully!");
+            displayVideos();
+            displayRecommendations();
+        }
+
+        // Display uploaded videos
+        function displayVideos() {
+            const videosContainer = document.getElementById("uploadedVideos");
+            videosContainer.innerHTML = "";
+
+            if (currentChannelIndex !== null) {
+                const channel = channels[currentChannelIndex];
+                channel.videos.forEach((video, index) => {
+                    const videoCard = document.createElement("div");
+                    videoCard.classList.add("video-card");
+                    videoCard.innerHTML = `
+                        <img src="${video.thumbnail}" class="video-thumbnail" onclick="playVideo(${index}, '${video.file}')">
+                        <div class="play-button">▶</div>
+                        <p>${video.title}</p>
+                    `;
+                    videosContainer.appendChild(videoCard);
+                });
+            }
+        }
+
+        // Play the selected video
+        function playVideo(index, videoUrl) {
+            let video = channels[currentChannelIndex].videos[index];
+            currentVideoIndex = index;
+
+            if (!videoUrl) {
+                videoUrl = video.file;
+            }
+
+            if (video.views === 0) {
+                video.views = 1;
+                localStorage.setItem("channels", JSON.stringify(channels));
+            }
+
+            document.getElementById("videoPlayer").src = videoUrl;
+            document.getElementById("viewCount").textContent = video.views;
+            document.getElementById("videoPlayerContainer").style.display = "block";
+            hideOtherVideos();
+            displayLikesDislikes(video);
+            displayComments();
+        }
+
+        // Close the video player
+        function closeVideo() {
+            document.getElementById("videoPlayerContainer").style.display = "none";
+            showAllVideos();
+        }
+
+        // Hide all other videos
+        function hideOtherVideos() {
+            document.getElementById("uploadedVideos").classList.add("hidden");
+        }
+
+        // Show all videos
+        function showAllVideos() {
+            document.getElementById("uploadedVideos").classList.remove("hidden");
+        }
+
+        // Display likes and dislikes
+        function displayLikesDislikes(video) {
+            let likeButton = document.querySelector(".like");
+            let dislikeButton = document.querySelector(".dislike");
+            likeButton.textContent = `Like (${video.likes})`;
+            dislikeButton.textContent = `Dislike (${video.dislikes})`;
+        }
+
+        // Add comment
+        function addComment() {
+            let commentText = document.getElementById("commentInput").value;
+            if (!commentText) {
+                alert("Please add a comment.");
+                return;
+            }
+
+            let video = channels[currentChannelIndex].videos[currentVideoIndex];
+            video.comments.push(commentText);
+            localStorage.setItem("channels", JSON.stringify(channels));
+            displayComments();
+        }
+
+        // Display comments
+        function displayComments() {
+            let video = channels[currentChannelIndex].videos[currentVideoIndex];
+            let commentList = document.getElementById("commentList");
+            commentList.innerHTML = "";
+
+            video.comments.forEach(comment => {
+                let commentItem = document.createElement("li");
+                commentItem.classList.add("comment");
+                commentItem.textContent = comment;
+                commentList.appendChild(commentItem);
+            });
+        }
+
+        // Toggle like
+        function toggleLike() {
+            let video = channels[currentChannelIndex].videos[currentVideoIndex];
+            if (liked) {
+                video.likes--;
+                liked = false;
+            } else {
+                video.likes++;
+                liked = true;
+            }
+            localStorage.setItem("channels", JSON.stringify(channels));
+            displayLikesDislikes(video);
+        }
+
+        // Toggle dislike
+        function toggleDislike() {
+            let video = channels[currentChannelIndex].videos[currentVideoIndex];
+            if (disliked) {
+                video.dislikes--;
+                disliked = false;
+            } else {
+                video.dislikes++;
+                disliked = true;
+            }
+            localStorage.setItem("channels", JSON.stringify(channels));
+            displayLikesDislikes(video);
+        }
+
+        // Show the upload section once a channel is created
+        function showVideoUploadSection() {
+            document.querySelector('.video-upload').classList.remove('hidden');
+        }
+
+        // Display recommended videos
+        function displayRecommendations() {
+            const recommendedVideosContainer = document.getElementById('recommendedVideos');
+            recommendedVideosContainer.innerHTML = ''; // Clear previous recommendations
+
+            // Loop through all channels and videos
+            channels.forEach(channel => {
+                channel.videos.forEach(video => {
+                    const recommendedVideoCard = document.createElement('div');
+                    recommendedVideoCard.classList.add('recommended-video-card');
+                    recommendedVideoCard.innerHTML = `
+                        <img src="${video.thumbnail}" class="recommended-video-thumbnail" onclick="playVideo(${index}, '${video.file}')">
+                        <p class="recommended-video-title">${video.title}</p>
+                    `;
+                    recommendedVideosContainer.appendChild(recommendedVideoCard);
+                });
+            });
         }
     </script>
 </body>
