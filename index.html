@@ -76,11 +76,66 @@
             border-radius: 5px;
             cursor: pointer;
         }
+
+        #createChannelContainer {
+            display: block;
+            background: #282828;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px auto;
+            width: 300px;
+        }
+
+        #channelDashboard {
+            display: none;
+        }
+
+        .video-actions {
+            margin-top: 10px;
+        }
+
+        .comment-section {
+            margin-top: 20px;
+            text-align: left;
+            padding: 10px;
+            border-top: 1px solid gray;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Welcome to realTube</h1>
+
+        <!-- Create Channel -->
+        <div id="createChannelContainer">
+            <h2>Create Your Channel</h2>
+            <input type="text" id="channelName" placeholder="Enter channel name">
+            <button onclick="createChannel()">Create</button>
+        </div>
+
+        <!-- Channel Dashboard -->
+        <div id="channelDashboard">
+            <h2 id="channelTitle"></h2>
+            <img id="channelPfp" src="https://via.placeholder.com/100" width="100">
+            <p>Subscribers: <span id="subCount">0</span></p>
+            <button onclick="switchChannel()">Switch Channel</button>
+            <button onclick="uploadVideoForm()">Upload Video</button>
+        </div>
+
+        <!-- Video Upload -->
+        <div id="uploadForm" style="display:none;">
+            <h2>Upload Video</h2>
+            <input type="text" id="videoTitle" placeholder="Video Title"><br>
+            <input type="file" id="videoFile" accept="video/mp4"><br>
+            <input type="file" id="thumbnailFile" accept="image/*"><br>
+            <select id="visibility">
+                <option value="public">Public</option>
+                <option value="private">Private</option>
+                <option value="scheduled">Scheduled</option>
+            </select>
+            <button onclick="uploadVideo()">Upload</button>
+        </div>
+
         <h2>Your Videos</h2>
         <div id="uploadedVideos"></div>
     </div>
@@ -89,73 +144,95 @@
     <div id="videoPlayerContainer">
         <video id="videoPlayer" controls></video>
         <p>Views: <span id="viewCount">0</span></p>
+        <div class="video-actions">
+            <button id="likeButton">👍 Like (<span id="likeCount">0</span>)</button>
+            <button id="dislikeButton">👎 Dislike (<span id="dislikeCount">0</span>)</button>
+        </div>
+        <div class="comment-section">
+            <h3>Comments</h3>
+            <input type="text" id="commentInput" placeholder="Add a comment">
+            <button onclick="addComment()">Post</button>
+            <ul id="commentList"></ul>
+        </div>
         <button id="closeButton" onclick="closeVideo()">Close</button>
     </div>
 
     <script>
-        let loggedInChannel = {
-            name: "My Channel",
-            videos: [
-                {
-                    title: "My First Video",
-                    thumbnail: "https://via.placeholder.com/300x180",
-                    file: "video.mp4",
-                    views: 0
-                }
-            ]
-        };
+        let channels = JSON.parse(localStorage.getItem("channels")) || [];
+        let currentChannelIndex = localStorage.getItem("currentChannelIndex") || null;
+        let viewedVideos = new Set();
 
-        function displayVideos() {
-            const videoContainer = document.getElementById("uploadedVideos");
-            videoContainer.innerHTML = "";
+        function createChannel() {
+            let name = document.getElementById("channelName").value;
+            if (!name) return alert("Please enter a channel name!");
+            if (channels.some(c => c.name === name)) return alert("Channel name already exists!");
 
-            loggedInChannel.videos.forEach((video, index) => {
-                let videoCard = document.createElement("div");
-                videoCard.classList.add("video-card");
+            let newChannel = { 
+                name, 
+                subscribers: 0, 
+                videos: [], 
+                profilePicture: "https://via.placeholder.com/100" 
+            };
 
-                let thumbnail = document.createElement("img");
-                thumbnail.src = video.thumbnail;
-                thumbnail.classList.add("video-thumbnail");
-
-                let playButton = document.createElement("div");
-                playButton.classList.add("play-button");
-                playButton.innerHTML = "▶";
-
-                videoCard.appendChild(thumbnail);
-                videoCard.appendChild(playButton);
-                videoCard.onclick = () => playVideo(index);
-
-                videoContainer.appendChild(videoCard);
-            });
+            channels.push(newChannel);
+            localStorage.setItem("channels", JSON.stringify(channels));
+            switchToChannel(channels.length - 1);
         }
 
-        let currentVideoIndex = null;
-        let viewInterval = null;
+        function switchChannel() {
+            let newIndex = prompt("Enter channel name:");
+            let index = channels.findIndex(c => c.name === newIndex);
+            if (index === -1) return alert("Channel not found!");
+            switchToChannel(index);
+        }
+
+        function switchToChannel(index) {
+            currentChannelIndex = index;
+            localStorage.setItem("currentChannelIndex", index);
+            document.getElementById("createChannelContainer").style.display = "none";
+            document.getElementById("channelDashboard").style.display = "block";
+            let channel = channels[index];
+            document.getElementById("channelTitle").textContent = channel.name;
+            document.getElementById("channelPfp").src = channel.profilePicture;
+            document.getElementById("subCount").textContent = channel.subscribers;
+            displayVideos();
+        }
+
+        function uploadVideoForm() {
+            document.getElementById("uploadForm").style.display = "block";
+        }
+
+        function uploadVideo() {
+            let title = document.getElementById("videoTitle").value;
+            let file = document.getElementById("videoFile").files[0];
+            let thumb = document.getElementById("thumbnailFile").files[0];
+            let visibility = document.getElementById("visibility").value;
+
+            if (!title || !file || !thumb) return alert("Please fill all fields!");
+
+            let video = { title, file: URL.createObjectURL(file), thumbnail: URL.createObjectURL(thumb), views: 0, visibility, likes: 0, dislikes: 0, comments: [] };
+
+            channels[currentChannelIndex].videos.push(video);
+            localStorage.setItem("channels", JSON.stringify(channels));
+            displayVideos();
+        }
 
         function playVideo(index) {
-            currentVideoIndex = index;
-            const videoData = loggedInChannel.videos[index];
+            let video = channels[currentChannelIndex].videos[index];
 
-            document.getElementById("videoPlayer").src = videoData.file;
-            document.getElementById("viewCount").textContent = videoData.views;
+            if (!viewedVideos.has(index)) {
+                video.views++;
+                viewedVideos.add(index);
+            }
+
+            document.getElementById("videoPlayer").src = video.file;
+            document.getElementById("viewCount").textContent = video.views;
             document.getElementById("videoPlayerContainer").style.display = "block";
-
-            let videoElement = document.getElementById("videoPlayer");
-            videoElement.play();
-
-            viewInterval = setInterval(() => {
-                loggedInChannel.videos[index].views += 1;
-                document.getElementById("viewCount").textContent = loggedInChannel.videos[index].views;
-            }, 1000);
         }
 
         function closeVideo() {
             document.getElementById("videoPlayerContainer").style.display = "none";
-            document.getElementById("videoPlayer").pause();
-            clearInterval(viewInterval);
         }
-
-        displayVideos();
     </script>
 </body>
 </html>
