@@ -55,6 +55,14 @@
             cursor: pointer;
         }
 
+        #loading {
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 100px;
+            display: none;
+        }
+
         #channel-info {
             display: none;
             background-color: white;
@@ -158,7 +166,6 @@
             font-size: 12px;
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
 </head>
 <body>
     <header>
@@ -167,6 +174,8 @@
             <button id="search-button">🔍</button>
         </div>
     </header>
+
+    <div id="loading">Loading...</div>
 
     <div id="channel-info">
         <img id="channel-banner" src="" alt="Channel Banner">
@@ -189,19 +198,20 @@
     </main>
 
     <script>
-        const API_KEY = 'AIzaSyCautrBu80WZb-kknjo2Cv-SXbFH_myIjo'; // Your YouTube API Key
+        const API_KEY = 'AIzaSyDwWtyo-Ks4SWjxDGMVAoFpgtP_FvJdrBU'; // Your YouTube API Key (Consider securing this)
         const videoGrid = document.getElementById('video-grid');
         const searchButton = document.getElementById('search-button');
         const searchBar = document.getElementById('search-bar');
         const channelInfo = document.getElementById('channel-info');
+        const loadingIndicator = document.getElementById('loading');
         let currentChannelId = ''; // To track the current channel
         let isSubscribed = false; // Track if the user is subscribed to the current channel
         let subscriberCount = 0; // Track the subscriber count for the current channel
 
-        // Play subscribe sound
-        const subscribeSound = new Audio('https://www.soundjay.com/button/beep-07.wav'); // Replace with your sound URL
-
         async function fetchVideos(query = '') {
+            loadingIndicator.style.display = 'block';
+            videoGrid.innerHTML = '';
+
             let url;
 
             if (query.startsWith('@')) {
@@ -210,6 +220,7 @@
 
                 if (!channelId) {
                     videoGrid.innerHTML = `<p>No channel found for "${channelName}".</p>`;
+                    loadingIndicator.style.display = 'none';
                     return;
                 }
 
@@ -222,88 +233,104 @@
                 channelInfo.style.display = 'none';
             }
 
-            const response = await fetch(url);
-            const data = await response.json();
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
 
-            videoGrid.innerHTML = data.items.map(item => `
-                <div class="video-container" id="video-container-${item.id.videoId}">
-                    <iframe src="https://www.youtube.com/embed/${item.id.videoId}" frameborder="0" allowfullscreen></iframe>
-                    <p>${item.snippet.title}</p>
-                    <div class="video-details" id="video-details-${item.id.videoId}">
-                        <!-- Video stats will be inserted here -->
+                if (!data.items.length) {
+                    videoGrid.innerHTML = `<p>No videos found for "${query}".</p>`;
+                }
+
+                videoGrid.innerHTML = data.items.map(item => `
+                    <div class="video-container" id="video-container-${item.id.videoId}">
+                        <iframe src="https://www.youtube.com/embed/${item.id.videoId}" frameborder="0" allowfullscreen></iframe>
+                        <p>${item.snippet.title}</p>
+                        <div class="video-details" id="video-details-${item.id.videoId}">
+                            <!-- Video stats will be inserted here -->
+                        </div>
                     </div>
-                </div>
-            `).join('');
+                `).join('');
 
-            // After videos are loaded, fetch the details for each video
-            for (const item of data.items) {
-                await fetchVideoStats(item.id.videoId);
+                // After videos are loaded, fetch the details for each video
+                for (const item of data.items) {
+                    await fetchVideoStats(item.id.videoId);
+                }
+            } catch (error) {
+                videoGrid.innerHTML = `<p>Failed to fetch videos. Please try again later.</p>`;
+            } finally {
+                loadingIndicator.style.display = 'none';
             }
         }
 
         async function getChannelId(channelName) {
-            const response = await fetch(`https://www.googleapis.com/youtube/v3/search?part=id&q=${channelName}&type=channel&maxResults=1&key=${API_KEY}`);
-            const data = await response.json();
-            return data.items.length > 0 ? data.items[0].id.channelId : null;
+            try {
+                const response = await fetch(`https://www.googleapis.com/youtube/v3/search?part=id&q=${channelName}&type=channel&maxResults=1&key=${API_KEY}`);
+                const data = await response.json();
+                return data.items.length > 0 ? data.items[0].id.channelId : null;
+            } catch (error) {
+                return null;
+            }
         }
 
         async function fetchChannelInfo(channelId) {
-            const response = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelId}&key=${API_KEY}`);
-            const data = await response.json();
-            const channel = data.items[0].snippet;
+            try {
+                const response = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelId}&key=${API_KEY}`);
+                const data = await response.json();
+                const channel = data.items[0].snippet;
 
-            document.getElementById('channel-banner').src = channel.thumbnails.high.url;
-            document.getElementById('channel-pfp').src = channel.thumbnails.default.url;
-            document.getElementById('channel-name').innerText = channel.title;
-            document.getElementById('channel-description').innerText = channel.description;
-            document.getElementById('video-count').innerText = data.items[0].statistics.videoCount;
-            document.getElementById('view-count').innerText = data.items[0].statistics.viewCount;
-            document.getElementById('join-date').innerText = new Date(channel.publishedAt).toLocaleDateString();
+                document.getElementById('channel-banner').src = channel.thumbnails.high.url;
+                document.getElementById('channel-pfp').src = channel.thumbnails.default.url;
+                document.getElementById('channel-name').innerText = channel.title;
+                document.getElementById('channel-description').innerText = channel.description;
+                document.getElementById('video-count').innerText = data.items[0].statistics.videoCount || "N/A";
+                document.getElementById('view-count').innerText = data.items[0].statistics.viewCount || "N/A";
+                document.getElementById('join-date').innerText = new Date(channel.publishedAt).toLocaleDateString() || "N/A";
 
-            // Fetch subscription state and subscriber count from localStorage
-            const storedSubscriberCount = parseInt(localStorage.getItem(`subscriberCount_${channelId}`)) || 0;
-            const storedIsSubscribed = localStorage.getItem(`isSubscribed_${channelId}`) === 'true';
+                // Update subscriber count from localStorage
+                subscriberCount = parseInt(localStorage.getItem(`subscriberCount_${channelId}`)) || 0;
+                isSubscribed = localStorage.getItem(`isSubscribed_${channelId}`) === 'true';
 
-            subscriberCount = storedSubscriberCount;
-            isSubscribed = storedIsSubscribed;
+                document.getElementById('subscriber-count').innerText = subscriberCount;
 
-            document.getElementById('subscriber-count').innerText = subscriberCount;
+                const subscribeButton = document.getElementById('subscribe-btn');
+                if (isSubscribed) {
+                    subscribeButton.innerText = "Subscribed";
+                    subscribeButton.classList.add('subscribed');
+                } else {
+                    subscribeButton.innerText = "Subscribe";
+                    subscribeButton.classList.remove('subscribed');
+                }
 
-            const subscribeButton = document.getElementById('subscribe-btn');
-            if (isSubscribed) {
-                subscribeButton.innerText = "Subscribed";
-                subscribeButton.classList.add('subscribed');
-            } else {
-                subscribeButton.innerText = "Subscribe";
-                subscribeButton.classList.remove('subscribed');
+                channelInfo.style.display = 'block';
+            } catch (error) {
+                console.error('Error fetching channel info:', error);
             }
-
-            channelInfo.style.display = 'block';
         }
 
         async function fetchVideoStats(videoId) {
-            const response = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${videoId}&key=${API_KEY}`);
-            const data = await response.json();
+            try {
+                const response = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${videoId}&key=${API_KEY}`);
+                const data = await response.json();
 
-            const videoStats = data.items[0].statistics;
+                const videoStats = data.items[0].statistics;
 
-            const videoDetailsElement = document.getElementById(`video-details-${videoId}`);
-            videoDetailsElement.innerHTML = `
-                <div class="video-stats">
-                    <span class="video-stat">Views: ${videoStats.viewCount}</span>
-                    <span class="video-stat">Likes: ${videoStats.likeCount}</span>
-                    <span class="video-stat">Comments: ${videoStats.commentCount}</span>
-                </div>
-            `;
+                const videoDetailsElement = document.getElementById(`video-details-${videoId}`);
+                videoDetailsElement.innerHTML = `
+                    <div class="video-stats">
+                        <span class="video-stat">Views: ${videoStats.viewCount}</span>
+                        <span class="video-stat">Likes: ${videoStats.likeCount}</span>
+                        <span class="video-stat">Comments: ${videoStats.commentCount}</span>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error fetching video stats:', error);
+            }
         }
 
         function subscribe() {
             if (!isSubscribed) {
                 isSubscribed = true;
                 subscriberCount++;
-                subscribeSound.play();
-
-                // Save subscription status and count in localStorage for this specific channel
                 localStorage.setItem(`isSubscribed_${currentChannelId}`, 'true');
                 localStorage.setItem(`subscriberCount_${currentChannelId}`, subscriberCount);
 
