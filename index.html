@@ -3,451 +3,331 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>realTube - Custom YouTube</title>
+    <title>YouTube Clone</title>
     <style>
-        /* Basic CSS styles */
-        body {
-            background-color: #181818;
-            color: white;
-            font-family: 'Arial', sans-serif;
+        @import url("https://fonts.googleapis.com/css?family=Roboto:400,400i,700");
+
+        * {
+            font-family: "Roboto", sans-serif;
+            font-size: 14px;
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: auto;
-            text-align: center;
-            padding: 20px;
+        body {
+            background-color: #f9f9f9;
         }
 
-        /* Video Card */
-        .video-card {
-            position: relative;
-            display: inline-block;
-            margin: 10px;
-            cursor: pointer;
-        }
-
-        .video-thumbnail {
-            width: 300px;
-            height: 170px;
-            border-radius: 10px;
-            object-fit: cover;
-        }
-
-        /* Video Player */
-        #videoPlayerContainer {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: black;
-            padding: 20px;
-            border-radius: 10px;
-            z-index: 1000;
-            text-align: center;
-            max-width: 800px;
-            width: 100%;
-        }
-
-        #videoPlayer {
-            width: 100%;
-            max-width: 750px;
-            height: 420px;
-            border-radius: 10px;
-        }
-
-        /* Buttons */
-        .button-group {
+        header {
             display: flex;
             justify-content: center;
-            margin-top: 15px;
-            margin-bottom: 15px;
+            align-items: center;
+            position: fixed;
+            width: 100%;
+            height: 60px;
+            background-color: white;
+            padding: 0 16px;
+            box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
         }
 
-        .button-group button {
-            background-color: #333;
-            color: white;
-            border: none;
-            padding: 8px 20px;
-            margin: 0 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
+        #search-container {
             display: flex;
             align-items: center;
         }
 
-        .button-group button:hover {
-            background-color: #555;
+        #search-bar {
+            width: 500px;
+            height: 36px;
+            border: 1px solid #ccc;
+            border-radius: 20px 0 0 20px;
+            padding-left: 10px;
         }
 
-        .button-group .icon {
-            margin-right: 5px;
-        }
-
-        /* Comment Section */
-        .comment-section {
-            margin-top: 20px;
-            text-align: left;
-            max-width: 800px;
-            margin: auto;
-        }
-
-        .comment-box {
-            width: 100%;
-            height: 60px;
-            margin-bottom: 10px;
-            padding: 10px;
-            border-radius: 5px;
-            background-color: #333;
-            border: none;
-            color: white;
-            font-size: 14px;
-        }
-
-        .comments {
-            list-style: none;
-            padding-left: 0;
-            margin-top: 20px;
-        }
-
-        .comment {
-            background: #282828;
-            margin-bottom: 10px;
-            padding: 10px;
-            border-radius: 5px;
-        }
-
-        /* Channel Creation and Video Upload */
-        .channel-creation, .video-upload {
-            margin-top: 20px;
-        }
-
-        .input-field {
-            margin-bottom: 10px;
-            padding: 10px;
-            width: 300px;
-        }
-
-        /* Hide Videos when Video Player is Active */
-        #uploadedVideos.hidden {
-            display: none;
-        }
-
-        /* Recommendations */
-        .recommendations {
-            margin-top: 30px;
-            text-align: center;
-        }
-
-        .recommendations h3 {
-            margin-bottom: 20px;
-        }
-
-        .recommended-video-card {
-            display: inline-block;
-            margin: 10px;
-            text-align: center;
-        }
-
-        .recommended-video-thumbnail {
-            width: 250px;
-            height: 140px;
-            object-fit: cover;
-            border-radius: 10px;
-        }
-
-        .recommended-video-title {
-            color: white;
-            margin-top: 10px;
-            max-width: 250px;
-            word-wrap: break-word;
-        }
-
-        /* Modal Close Button */
-        #closeButton {
-            background-color: red;
-            color: white;
-            padding: 10px;
-            margin-top: 10px;
-            border-radius: 5px;
+        #search-button {
+            height: 36px;
+            width: 50px;
+            background-color: #f8f8f8;
+            border: 1px solid #ccc;
+            border-left: none;
+            border-radius: 0 20px 20px 0;
             cursor: pointer;
         }
-        
-        .hidden {
+
+        #channel-info {
             display: none;
+            background-color: white;
+            padding: 20px;
+            text-align: center;
+            margin-top: 70px;
+            box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        #channel-banner {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+
+        #channel-profile {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: -40px;
+        }
+
+        #channel-pfp {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 3px solid white;
+        }
+
+        #channel-name {
+            font-size: 20px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        #channel-description {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #606060;
+        }
+
+        #subscribe-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .subscribe-btn {
+            background-color: red;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+
+        .subscribe-btn.subscribed {
+            background-color: grey;
+            cursor: not-allowed;
+        }
+
+        #video-section {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding: 10px;
+        }
+
+        .video-container {
+            width: 320px;
+            background-color: white;
+            box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            margin-right: 10px;
+        }
+
+        iframe {
+            width: 100%;
+            height: 180px;
+            border-radius: 5px;
+        }
+
+        .video-details {
+            font-size: 14px;
+            color: #606060;
+            margin-top: 10px;
+        }
+
+        .video-stats {
+            margin-top: 5px;
+        }
+
+        .video-stat {
+            margin-right: 15px;
+            font-size: 12px;
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h1>Welcome to realTube</h1>
-
-        <!-- Channel Creation Section -->
-        <div class="channel-creation">
-            <h2>Create a Channel</h2>
-            <input id="channelName" type="text" class="input-field" placeholder="Channel Name">
-            <input id="channelDescription" type="text" class="input-field" placeholder="Channel Description">
-            <button onclick="createChannel()">Create Channel</button>
+    <header>
+        <div id="search-container">
+            <input type="text" id="search-bar" placeholder="Search or @channelName">
+            <button id="search-button">🔍</button>
         </div>
+    </header>
 
-        <!-- Video Upload Section (Hidden until channel is created) -->
-        <div class="video-upload hidden">
-            <h2>Upload a Video</h2>
-            <input id="videoTitle" type="text" class="input-field" placeholder="Video Title">
-            <input id="videoThumbnail" type="text" class="input-field" placeholder="Video Thumbnail URL">
-            <input id="videoFile" type="file" class="input-field">
-            <textarea id="videoDescription" class="input-field" placeholder="Video Description"></textarea>
-            <button onclick="uploadVideo()">Upload Video</button>
+    <div id="channel-info">
+        <img id="channel-banner" src="" alt="Channel Banner">
+        <div id="channel-profile">
+            <img id="channel-pfp" src="" alt="Channel Profile Picture">
+            <div id="channel-name"></div>
         </div>
-
-        <!-- Recommendations Section -->
-        <div class="recommendations">
-            <h3>Recommended Videos</h3>
-            <div id="recommendedVideos"></div>
+        <p id="channel-description"></p>
+        <div id="subscribe-container">
+            <span id="subscriber-count">0</span> Subscribers
+            <button class="subscribe-btn" id="subscribe-btn" onclick="subscribe()">Subscribe</button>
         </div>
-
-        <!-- Video Player Modal -->
-        <div id="videoPlayerContainer">
-            <video id="videoPlayer" controls></video>
-            <p>Views: <span id="viewCount">0</span></p>
-            <div class="button-group">
-                <button class="like" onclick="toggleLike()"><span class="icon">👍</span>Like</button>
-                <button class="dislike" onclick="toggleDislike()"><span class="icon">👎</span>Dislike</button>
-                <button class="share"><span class="icon">🔗</span>Share</button>
-                <button class="comment"><span class="icon">💬</span>Comment</button>
-            </div>
-            <div class="comment-section">
-                <textarea id="commentInput" class="comment-box" placeholder="Add a comment..."></textarea><br>
-                <button onclick="addComment()">Post Comment</button>
-                <ul id="commentList" class="comments"></ul>
-            </div>
-            <button id="backButton" onclick="closeVideo()">Back</button>
-            <button id="closeButton" onclick="closeVideo()">Close</button>
+        <div id="channel-details">
+            <p id="channel-stats">Videos: <span id="video-count">0</span> | Views: <span id="view-count">0</span> | Joined: <span id="join-date">N/A</span></p>
         </div>
-
-        <h2>Your Videos</h2>
-        <div id="uploadedVideos" class="hidden"></div>
     </div>
 
+    <main id="video-section">
+        <div id="video-grid"></div>
+    </main>
+
     <script>
-        let channels = JSON.parse(localStorage.getItem("channels")) || [];
-        let currentChannelIndex = localStorage.getItem("currentChannelIndex") || null;
-        let currentVideoIndex = null;
-        let liked = false;
-        let disliked = false;
+        const API_KEY = 'AIzaSyDwWtyo-Ks4SWjxDGMVAoFpgtP_FvJdrBU'; // Your YouTube API Key
+        const videoGrid = document.getElementById('video-grid');
+        const searchButton = document.getElementById('search-button');
+        const searchBar = document.getElementById('search-bar');
+        const channelInfo = document.getElementById('channel-info');
+        let currentChannelId = ''; // To track the current channel
+        let isSubscribed = false; // Track if the user is subscribed to the current channel
+        let subscriberCount = 0; // Track the subscriber count for the current channel
 
-        // Create a new channel
-        function createChannel() {
-            const channelName = document.getElementById('channelName').value;
-            const channelDescription = document.getElementById('channelDescription').value;
+        // Play subscribe sound
+        const subscribeSound = new Audio('https://www.soundjay.com/button/beep-07.wav'); // Replace with your sound URL
 
-            if (!channelName || !channelDescription) {
-                alert("Please provide a valid channel name and description.");
-                return;
-            }
+        async function fetchVideos(query = '') {
+            let url;
 
-            const newChannel = {
-                name: channelName,
-                description: channelDescription,
-                videos: [],
-                subscribers: 0,
-            };
+            if (query.startsWith('@')) {
+                const channelName = query.substring(1);
+                const channelId = await getChannelId(channelName);
 
-            channels.push(newChannel);
-            localStorage.setItem("channels", JSON.stringify(channels));
-            alert(`Channel '${channelName}' created successfully!`);
-            localStorage.setItem("currentChannelIndex", channels.length - 1);
-            displayVideos();
-            displayRecommendations();
-            showVideoUploadSection(); // Show the upload section after channel creation
-        }
+                if (!channelId) {
+                    videoGrid.innerHTML = `<p>No channel found for "${channelName}".</p>`;
+                    return;
+                }
 
-        // Upload a new video
-        function uploadVideo() {
-            const videoTitle = document.getElementById('videoTitle').value;
-            const videoThumbnail = document.getElementById('videoThumbnail').value;
-            const videoFile = document.getElementById('videoFile').files[0];
-            const videoDescription = document.getElementById('videoDescription').value;
+                currentChannelId = channelId;
+                await fetchChannelInfo(channelId);
 
-            if (!videoTitle || !videoThumbnail || !videoFile || !videoDescription) {
-                alert("Please fill out all fields to upload a video.");
-                return;
-            }
-
-            const videoUrl = URL.createObjectURL(videoFile);
-
-            const newVideo = {
-                title: videoTitle,
-                thumbnail: videoThumbnail,
-                file: videoUrl,
-                description: videoDescription,
-                views: 0,
-                likes: 0,
-                dislikes: 0,
-                comments: [],
-            };
-
-            if (channels.length === 0 || currentChannelIndex === null) {
-                alert("Please create a channel first.");
-                return;
-            }
-
-            channels[currentChannelIndex].videos.push(newVideo);
-            localStorage.setItem("channels", JSON.stringify(channels));
-            alert("Video uploaded successfully!");
-            displayVideos();
-            displayRecommendations();
-        }
-
-        // Display uploaded videos
-        function displayVideos() {
-            const videosContainer = document.getElementById("uploadedVideos");
-            videosContainer.innerHTML = "";
-
-            if (currentChannelIndex !== null) {
-                const channel = channels[currentChannelIndex];
-                channel.videos.forEach((video, index) => {
-                    const videoCard = document.createElement("div");
-                    videoCard.classList.add("video-card");
-                    videoCard.innerHTML = `
-                        <img src="${video.thumbnail}" class="video-thumbnail" onclick="playVideo(${index}, '${video.file}')">
-                        <div class="play-button">▶</div>
-                        <p>${video.title}</p>
-                    `;
-                    videosContainer.appendChild(videoCard);
-                });
-            }
-        }
-
-        // Play the selected video
-        function playVideo(index, videoUrl) {
-            let video = channels[currentChannelIndex].videos[index];
-            currentVideoIndex = index;
-
-            if (!videoUrl) {
-                videoUrl = video.file;
-            }
-
-            if (video.views === 0) {
-                video.views = 1;
-                localStorage.setItem("channels", JSON.stringify(channels));
-            }
-
-            document.getElementById("videoPlayer").src = videoUrl;
-            document.getElementById("viewCount").textContent = video.views;
-            document.getElementById("videoPlayerContainer").style.display = "block";
-            hideOtherVideos();
-            displayLikesDislikes(video);
-            displayComments();
-        }
-
-        // Close the video player
-        function closeVideo() {
-            document.getElementById("videoPlayerContainer").style.display = "none";
-            showAllVideos();
-        }
-
-        // Hide all other videos
-        function hideOtherVideos() {
-            document.getElementById("uploadedVideos").classList.add("hidden");
-        }
-
-        // Show all videos
-        function showAllVideos() {
-            document.getElementById("uploadedVideos").classList.remove("hidden");
-        }
-
-        // Display likes and dislikes
-        function displayLikesDislikes(video) {
-            let likeButton = document.querySelector(".like");
-            let dislikeButton = document.querySelector(".dislike");
-            likeButton.textContent = `Like (${video.likes})`;
-            dislikeButton.textContent = `Dislike (${video.dislikes})`;
-        }
-
-        // Add comment
-        function addComment() {
-            let commentText = document.getElementById("commentInput").value;
-            if (!commentText) {
-                alert("Please add a comment.");
-                return;
-            }
-
-            let video = channels[currentChannelIndex].videos[currentVideoIndex];
-            video.comments.push(commentText);
-            localStorage.setItem("channels", JSON.stringify(channels));
-            displayComments();
-        }
-
-        // Display comments
-        function displayComments() {
-            let video = channels[currentChannelIndex].videos[currentVideoIndex];
-            let commentList = document.getElementById("commentList");
-            commentList.innerHTML = "";
-
-            video.comments.forEach(comment => {
-                let commentItem = document.createElement("li");
-                commentItem.classList.add("comment");
-                commentItem.textContent = comment;
-                commentList.appendChild(commentItem);
-            });
-        }
-
-        // Toggle like
-        function toggleLike() {
-            let video = channels[currentChannelIndex].videos[currentVideoIndex];
-            if (liked) {
-                video.likes--;
-                liked = false;
+                url = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&maxResults=8&order=date&type=video&key=${API_KEY}`;
             } else {
-                video.likes++;
-                liked = true;
+                url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&type=video&maxResults=8&key=${API_KEY}`;
+                channelInfo.style.display = 'none';
             }
-            localStorage.setItem("channels", JSON.stringify(channels));
-            displayLikesDislikes(video);
+
+            const response = await fetch(url);
+            const data = await response.json();
+
+            videoGrid.innerHTML = data.items.map(item => `
+                <div class="video-container" id="video-container-${item.id.videoId}">
+                    <iframe src="https://www.youtube.com/embed/${item.id.videoId}" frameborder="0" allowfullscreen></iframe>
+                    <p>${item.snippet.title}</p>
+                    <div class="video-details" id="video-details-${item.id.videoId}">
+                        <!-- Video stats will be inserted here -->
+                    </div>
+                </div>
+            `).join('');
+
+            // After videos are loaded, fetch the details for each video
+            for (const item of data.items) {
+                await fetchVideoStats(item.id.videoId);
+            }
         }
 
-        // Toggle dislike
-        function toggleDislike() {
-            let video = channels[currentChannelIndex].videos[currentVideoIndex];
-            if (disliked) {
-                video.dislikes--;
-                disliked = false;
+        async function getChannelId(channelName) {
+            const response = await fetch(`https://www.googleapis.com/youtube/v3/search?part=id&q=${channelName}&type=channel&maxResults=1&key=${API_KEY}`);
+            const data = await response.json();
+            return data.items.length > 0 ? data.items[0].id.channelId : null;
+        }
+
+        async function fetchChannelInfo(channelId) {
+            const response = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelId}&key=${API_KEY}`);
+            const data = await response.json();
+            const channel = data.items[0].snippet;
+
+            document.getElementById('channel-banner').src = channel.thumbnails.high.url;
+            document.getElementById('channel-pfp').src = channel.thumbnails.default.url;
+            document.getElementById('channel-name').innerText = channel.title;
+            document.getElementById('channel-description').innerText = channel.description;
+            document.getElementById('video-count').innerText = data.items[0].statistics.videoCount;
+            document.getElementById('view-count').innerText = data.items[0].statistics.viewCount;
+            document.getElementById('join-date').innerText = new Date(channel.publishedAt).toLocaleDateString();
+
+            // Fetch subscription state and subscriber count from localStorage
+            const storedSubscriberCount = parseInt(localStorage.getItem(`subscriberCount_${channelId}`)) || 0;
+            const storedIsSubscribed = localStorage.getItem(`isSubscribed_${channelId}`) === 'true';
+
+            subscriberCount = storedSubscriberCount;
+            isSubscribed = storedIsSubscribed;
+
+            document.getElementById('subscriber-count').innerText = subscriberCount;
+
+            const subscribeButton = document.getElementById('subscribe-btn');
+            if (isSubscribed) {
+                subscribeButton.innerText = "Subscribed";
+                subscribeButton.classList.add('subscribed');
             } else {
-                video.dislikes++;
-                disliked = true;
+                subscribeButton.innerText = "Subscribe";
+                subscribeButton.classList.remove('subscribed');
             }
-            localStorage.setItem("channels", JSON.stringify(channels));
-            displayLikesDislikes(video);
+
+            channelInfo.style.display = 'block';
         }
 
-        // Show the upload section once a channel is created
-        function showVideoUploadSection() {
-            document.querySelector('.video-upload').classList.remove('hidden');
+        async function fetchVideoStats(videoId) {
+            const response = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${videoId}&key=${API_KEY}`);
+            const data = await response.json();
+
+            const videoStats = data.items[0].statistics;
+
+            const videoDetailsElement = document.getElementById(`video-details-${videoId}`);
+            videoDetailsElement.innerHTML = `
+                <div class="video-stats">
+                    <span class="video-stat">Views: ${videoStats.viewCount}</span>
+                    <span class="video-stat">Likes: ${videoStats.likeCount}</span>
+                    <span class="video-stat">Comments: ${videoStats.commentCount}</span>
+                </div>
+            `;
         }
 
-        // Display recommended videos
-        function displayRecommendations() {
-            const recommendedVideosContainer = document.getElementById('recommendedVideos');
-            recommendedVideosContainer.innerHTML = ''; // Clear previous recommendations
+        function subscribe() {
+            if (!isSubscribed) {
+                isSubscribed = true;
+                subscriberCount++;
+                subscribeSound.play();
 
-            // Loop through all channels and videos
-            channels.forEach(channel => {
-                channel.videos.forEach(video => {
-                    const recommendedVideoCard = document.createElement('div');
-                    recommendedVideoCard.classList.add('recommended-video-card');
-                    recommendedVideoCard.innerHTML = `
-                        <img src="${video.thumbnail}" class="recommended-video-thumbnail" onclick="playVideo(${index}, '${video.file}')">
-                        <p class="recommended-video-title">${video.title}</p>
-                    `;
-                    recommendedVideosContainer.appendChild(recommendedVideoCard);
-                });
-            });
+                // Save subscription status and count in localStorage for this specific channel
+                localStorage.setItem(`isSubscribed_${currentChannelId}`, 'true');
+                localStorage.setItem(`subscriberCount_${currentChannelId}`, subscriberCount);
+
+                const subscribeButton = document.getElementById('subscribe-btn');
+                subscribeButton.innerText = "Subscribed";
+                subscribeButton.classList.add('subscribed');
+                document.getElementById('subscriber-count').innerText = subscriberCount;
+            }
         }
+
+        searchButton.addEventListener('click', () => {
+            const query = searchBar.value.trim();
+            if (query) fetchVideos(query);
+        });
+
+        searchBar.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                const query = searchBar.value.trim();
+                if (query) fetchVideos(query);
+            }
+        });
+
+        // Fetch default trending videos on load
+        fetchVideos();
     </script>
 </body>
 </html>
