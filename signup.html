@@ -4,23 +4,108 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up</title>
-    <link rel="stylesheet" href="signup.css"> <!-- Link to the signup.css file -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle, rgba(34, 193, 195, 1) 0%, rgba(253, 187, 45, 1) 100%);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            width: 400px;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        h2 {
+            color: #fff;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .signup-form input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .signup-form button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .signup-form button:hover {
+            background-color: #0056b3;
+        }
+
+        .signup-form p {
+            margin-top: 20px;
+        }
+
+        .signup-form p a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .google-signup {
+            margin-top: 20px;
+            background-color: #db4437;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .google-signup:hover {
+            background-color: #c1351d;
+        }
+    </style>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-auth.js"></script>
 </head>
 <body>
+
     <div class="container">
         <h2>Sign Up</h2>
+
+        <!-- Sign Up Form -->
         <div class="signup-form">
-            <input type="email" id="signup-email" placeholder="Email" required />
+            <input type="text" id="signup-username" placeholder="Username" required />
             <input type="password" id="signup-password" placeholder="Password" required />
             <button onclick="signUp()">Sign Up</button>
+            <p>Already have an account? <a href="index.html">Login here</a></p>
         </div>
-        <p>Already have an account? <a href="index.html">Login here</a></p>
+
+        <!-- Google OAuth Sign Up Button -->
+        <button class="google-signup" onclick="googleSignUp()">Sign Up with Google</button>
     </div>
 
+    <!-- Firebase Configuration -->
     <script>
+        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyArBI87qO7Y9RxpXLODSoNZlk-yWqSv7TE",
             authDomain: "hiiiii-af7a1.firebaseapp.com",
@@ -36,24 +121,43 @@
         const app = firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
 
-        // Sign up function
+        // Sign Up with Email and Password
         function signUp() {
-            const email = document.getElementById("signup-email").value;
+            const username = document.getElementById("signup-username").value;
             const password = document.getElementById("signup-password").value;
 
-            if (email && password) {
-                auth.createUserWithEmailAndPassword(email, password)
-                    .then((userCredential) => {
-                        alert("Sign-up successful!");
-                        window.location.href = "index.html";  // Redirect to login page (index.html)
-                    })
-                    .catch((error) => {
-                        alert("Error: " + error.message);
-                    });
-            } else {
-                alert("Please fill in all fields.");
-            }
+            auth.createUserWithEmailAndPassword(username + "@gmail.com", password)
+                .then((userCredential) => {
+                    // Successfully signed up
+                    const user = userCredential.user;
+                    alert("Sign-up successful! Welcome, " + user.displayName);
+                    window.location.href = "index.html"; // Redirect to the chat page (index.html)
+                })
+                .catch((error) => {
+                    const errorCode = error.code;
+                    const errorMessage = error.message;
+                    alert(errorMessage);
+                });
+        }
+
+        // Sign Up with Google OAuth
+        function googleSignUp() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+
+            auth.signInWithPopup(provider)
+                .then((result) => {
+                    // Successfully signed in with Google
+                    const user = result.user;
+                    alert("Sign-up successful! Welcome, " + user.displayName);
+                    window.location.href = "index.html"; // Redirect to the chat page (index.html)
+                })
+                .catch((error) => {
+                    const errorCode = error.code;
+                    const errorMessage = error.message;
+                    alert(errorMessage);
+                });
         }
     </script>
+
 </body>
 </html>
