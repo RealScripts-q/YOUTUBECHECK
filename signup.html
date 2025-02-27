@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up</title>
+    <title>Sign Up / Login</title>
     <style>
+        /* Shared CSS for both login and signup forms */
         body {
             font-family: Arial, sans-serif;
             display: flex;
@@ -24,11 +25,11 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
 
-        .signup-form {
+        .signup-form, .login-form {
             display: block;
         }
 
-        .signup-form input {
+        .signup-form input, .login-form input {
             width: 100%;
             padding: 10px;
             margin: 10px 0;
@@ -36,7 +37,7 @@
             border-radius: 4px;
         }
 
-        .signup-form button {
+        .signup-form button, .login-form button {
             padding: 10px 20px;
             background-color: #007bff;
             color: white;
@@ -46,7 +47,7 @@
             width: 100%;
         }
 
-        .signup-form button:hover {
+        .signup-form button:hover, .login-form button:hover {
             background-color: #0056b3;
         }
 
@@ -58,20 +59,52 @@
             color: #007bff;
             text-decoration: none;
         }
+
+        /* Center and align the login/signup form */
+        .form-container {
+            width: 400px;
+            max-width: 100%;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Sign Up</h2>
-        <div class="signup-form">
+    <div class="form-container">
+        <!-- Login Form -->
+        <div class="login-form">
+            <h2>Login</h2>
+            <input type="text" id="login-username" placeholder="Username" required />
+            <input type="password" id="login-password" placeholder="Password" required />
+            <button onclick="login()">Login</button>
+            <p>Don't have an account? <a href="signup.html" onclick="showSignup()">Sign Up</a></p>
+        </div>
+
+        <!-- Sign-Up Form (Initially Hidden) -->
+        <div class="signup-form" style="display: none;">
+            <h2>Sign Up</h2>
             <input type="text" id="signup-username" placeholder="Username" required />
             <input type="password" id="signup-password" placeholder="Password" required />
             <button onclick="signUp()">Sign Up</button>
+            <p>Already have an account? <a href="signup.html" onclick="showLogin()">Login</a></p>
         </div>
-        <p>Already have an account? <a href="index.html">Login here</a></p>
     </div>
 
     <script>
+        // Toggle between login and sign-up forms
+        function showSignup() {
+            document.querySelector(".login-form").style.display = "none";
+            document.querySelector(".signup-form").style.display = "block";
+        }
+
+        function showLogin() {
+            document.querySelector(".signup-form").style.display = "none";
+            document.querySelector(".login-form").style.display = "block";
+        }
+
         // Simulate user sign-up (in a real-world app, this would be done with a backend)
         function signUp() {
             const username = document.getElementById("signup-username").value;
@@ -81,9 +114,24 @@
                 localStorage.setItem("username", username);
                 localStorage.setItem("password", password);
                 alert("Sign-up successful!");
-                window.location.href = "index.html"; // Redirect to login page (index.html)
+                window.location.href = "index.html"; // Redirect to chat page
             } else {
                 alert("Please fill in all fields.");
+            }
+        }
+
+        // Simulate user login (in a real-world app, this would be done with a backend)
+        function login() {
+            const username = document.getElementById("login-username").value;
+            const password = document.getElementById("login-password").value;
+
+            const storedUsername = localStorage.getItem("username");
+            const storedPassword = localStorage.getItem("password");
+
+            if (username === storedUsername && password === storedPassword) {
+                window.location.href = "index.html"; // Redirect to chat page
+            } else {
+                alert("Invalid login credentials.");
             }
         }
     </script>
