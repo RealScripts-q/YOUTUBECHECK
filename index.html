@@ -3,358 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube Clone</title>
+    <title>Chat Login</title>
     <style>
-        @import url("https://fonts.googleapis.com/css?family=Roboto:400,400i,700");
-
-        * {
-            font-family: "Roboto", sans-serif;
-            font-size: 14px;
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
-            background-color: #f9f9f9;
-        }
-
-        header {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
             display: flex;
             justify-content: center;
             align-items: center;
-            position: fixed;
-            width: 100%;
-            height: 60px;
+            height: 100vh;
+        }
+
+        .container {
             background-color: white;
-            padding: 0 16px;
-            box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
-            z-index: 1000;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 300px;
         }
 
-        #search-container {
-            display: flex;
-            align-items: center;
-        }
-
-        #search-bar {
-            width: 500px;
-            height: 36px;
-            border: 1px solid #ccc;
-            border-radius: 20px 0 0 20px;
-            padding-left: 10px;
-        }
-
-        #search-button {
-            height: 36px;
-            width: 50px;
-            background-color: #f8f8f8;
-            border: 1px solid #ccc;
-            border-left: none;
-            border-radius: 0 20px 20px 0;
-            cursor: pointer;
-        }
-
-        #loading {
-            font-size: 18px;
-            font-weight: bold;
-            text-align: center;
-            margin-top: 100px;
-            display: none;
-        }
-
-        #channel-info {
-            display: none;
-            background-color: white;
-            padding: 20px;
-            text-align: center;
-            margin-top: 70px;
-            box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        #channel-banner {
+        .container input {
             width: 100%;
-            height: 150px;
-            object-fit: cover;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
         }
 
-        #channel-profile {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-top: -40px;
-        }
-
-        #channel-pfp {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            border: 3px solid white;
-        }
-
-        #channel-name {
-            font-size: 20px;
-            font-weight: bold;
-            margin-left: 10px;
-        }
-
-        #channel-description {
-            margin-top: 10px;
-            font-size: 14px;
-            color: #606060;
-        }
-
-        #subscribe-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-top: 10px;
-        }
-
-        .subscribe-btn {
-            background-color: red;
+        .container button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
             color: white;
             border: none;
-            padding: 5px 10px;
-            border-radius: 5px;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: 14px;
-            margin-left: 10px;
         }
 
-        .subscribe-btn.subscribed {
-            background-color: grey;
-            cursor: not-allowed;
+        .container button:hover {
+            background-color: #0056b3;
         }
 
-        #video-section {
-            margin-top: 20px;
-            display: flex;
-            flex-wrap: nowrap;
-            overflow-x: auto;
-            padding: 10px;
-        }
-
-        .video-container {
-            width: 320px;
-            background-color: white;
-            box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
-            padding: 10px;
-            border-radius: 10px;
+        .message {
             text-align: center;
-            margin-right: 10px;
-        }
-
-        iframe {
-            width: 100%;
-            height: 180px;
-            border-radius: 5px;
-        }
-
-        .video-details {
-            font-size: 14px;
-            color: #606060;
             margin-top: 10px;
         }
 
-        .video-stats {
-            margin-top: 5px;
+        #login-page, #signup-page {
+            display: none;
         }
 
-        .video-stat {
-            margin-right: 15px;
-            font-size: 12px;
+        #login-page.active, #signup-page.active {
+            display: block;
         }
+
     </style>
 </head>
 <body>
-    <header>
-        <div id="search-container">
-            <input type="text" id="search-bar" placeholder="Search or @channelName">
-            <button id="search-button">🔍</button>
+    <div class="container">
+        <!-- Sign-Up Form -->
+        <div id="signup-page" class="active">
+            <h2>Sign Up</h2>
+            <input type="text" id="signup-username" placeholder="Enter Username" required>
+            <input type="password" id="signup-password" placeholder="Enter Password" required>
+            <button onclick="signUp()">Sign Up</button>
+            <p class="message">Already have an account? <a href="#" onclick="showLogin()">Login</a></p>
         </div>
-    </header>
 
-    <div id="loading">Loading...</div>
-
-    <div id="channel-info">
-        <img id="channel-banner" src="" alt="Channel Banner">
-        <div id="channel-profile">
-            <img id="channel-pfp" src="" alt="Channel Profile Picture">
-            <div id="channel-name"></div>
-        </div>
-        <p id="channel-description"></p>
-        <div id="subscribe-container">
-            <span id="subscriber-count">0</span> Subscribers
-            <button class="subscribe-btn" id="subscribe-btn" onclick="subscribe()">Subscribe</button>
-        </div>
-        <div id="channel-details">
-            <p id="channel-stats">Videos: <span id="video-count">0</span> | Views: <span id="view-count">0</span> | Joined: <span id="join-date">N/A</span></p>
+        <!-- Login Form -->
+        <div id="login-page">
+            <h2>Login</h2>
+            <input type="text" id="login-username" placeholder="Enter Username" required>
+            <input type="password" id="login-password" placeholder="Enter Password" required>
+            <button onclick="login()">Login</button>
+            <p class="message">Don't have an account? <a href="#" onclick="showSignUp()">Sign Up</a></p>
         </div>
     </div>
 
-    <main id="video-section">
-        <div id="video-grid"></div>
-    </main>
-
     <script>
-        const API_KEY = 'AIzaSyDwWtyo-Ks4SWjxDGMVAoFpgtP_FvJdrBU'; // Your YouTube API Key (Consider securing this)
-        const videoGrid = document.getElementById('video-grid');
-        const searchButton = document.getElementById('search-button');
-        const searchBar = document.getElementById('search-bar');
-        const channelInfo = document.getElementById('channel-info');
-        const loadingIndicator = document.getElementById('loading');
-        let currentChannelId = ''; // To track the current channel
-        let isSubscribed = false; // Track if the user is subscribed to the current channel
-        let subscriberCount = 0; // Track the subscriber count for the current channel
-
-        async function fetchVideos(query = '') {
-            loadingIndicator.style.display = 'block';
-            videoGrid.innerHTML = '';
-
-            let url;
-
-            if (query.startsWith('@')) {
-                const channelName = query.substring(1);
-                const channelId = await getChannelId(channelName);
-
-                if (!channelId) {
-                    videoGrid.innerHTML = `<p>No channel found for "${channelName}".</p>`;
-                    loadingIndicator.style.display = 'none';
-                    return;
-                }
-
-                currentChannelId = channelId;
-                await fetchChannelInfo(channelId);
-
-                url = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&maxResults=8&order=date&type=video&key=${API_KEY}`;
-            } else {
-                url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&type=video&maxResults=8&key=${API_KEY}`;
-                channelInfo.style.display = 'none';
-            }
-
-            try {
-                const response = await fetch(url);
-                const data = await response.json();
-
-                if (!data.items.length) {
-                    videoGrid.innerHTML = `<p>No videos found for "${query}".</p>`;
-                }
-
-                videoGrid.innerHTML = data.items.map(item => `
-                    <div class="video-container" id="video-container-${item.id.videoId}">
-                        <iframe src="https://www.youtube.com/embed/${item.id.videoId}" frameborder="0" allowfullscreen></iframe>
-                        <p>${item.snippet.title}</p>
-                        <div class="video-details" id="video-details-${item.id.videoId}">
-                            <!-- Video stats will be inserted here -->
-                        </div>
-                    </div>
-                `).join('');
-
-                // After videos are loaded, fetch the details for each video
-                for (const item of data.items) {
-                    await fetchVideoStats(item.id.videoId);
-                }
-            } catch (error) {
-                videoGrid.innerHTML = `<p>Failed to fetch videos. Please try again later.</p>`;
-            } finally {
-                loadingIndicator.style.display = 'none';
-            }
+        // Show Sign-Up form
+        function showSignUp() {
+            document.getElementById('signup-page').classList.add('active');
+            document.getElementById('login-page').classList.remove('active');
         }
 
-        async function getChannelId(channelName) {
-            try {
-                const response = await fetch(`https://www.googleapis.com/youtube/v3/search?part=id&q=${channelName}&type=channel&maxResults=1&key=${API_KEY}`);
-                const data = await response.json();
-                return data.items.length > 0 ? data.items[0].id.channelId : null;
-            } catch (error) {
-                return null;
-            }
+        // Show Login form
+        function showLogin() {
+            document.getElementById('login-page').classList.add('active');
+            document.getElementById('signup-page').classList.remove('active');
         }
 
-        async function fetchChannelInfo(channelId) {
-            try {
-                const response = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelId}&key=${API_KEY}`);
-                const data = await response.json();
-                const channel = data.items[0].snippet;
-
-                document.getElementById('channel-banner').src = channel.thumbnails.high.url;
-                document.getElementById('channel-pfp').src = channel.thumbnails.default.url;
-                document.getElementById('channel-name').innerText = channel.title;
-                document.getElementById('channel-description').innerText = channel.description;
-                document.getElementById('video-count').innerText = data.items[0].statistics.videoCount || "N/A";
-                document.getElementById('view-count').innerText = data.items[0].statistics.viewCount || "N/A";
-                document.getElementById('join-date').innerText = new Date(channel.publishedAt).toLocaleDateString() || "N/A";
-
-                // Update subscriber count from localStorage
-                subscriberCount = parseInt(localStorage.getItem(`subscriberCount_${channelId}`)) || 0;
-                isSubscribed = localStorage.getItem(`isSubscribed_${channelId}`) === 'true';
-
-                document.getElementById('subscriber-count').innerText = subscriberCount;
-
-                const subscribeButton = document.getElementById('subscribe-btn');
-                if (isSubscribed) {
-                    subscribeButton.innerText = "Subscribed";
-                    subscribeButton.classList.add('subscribed');
-                } else {
-                    subscribeButton.innerText = "Subscribe";
-                    subscribeButton.classList.remove('subscribed');
-                }
-
-                channelInfo.style.display = 'block';
-            } catch (error) {
-                console.error('Error fetching channel info:', error);
+        // Sign-Up Functionality
+        function signUp() {
+            const username = document.getElementById('signup-username').value;
+            const password = document.getElementById('signup-password').value;
+            if (!username || !password) {
+                alert("Please enter both username and password.");
+                return;
             }
+
+            const userExists = localStorage.getItem(username);
+            if (userExists) {
+                alert("Username already exists. Please login.");
+                return;
+            }
+
+            const newUser = {
+                username: username,
+                password: password,
+                status: "active",
+                offenses: 0,
+                muteTime: 0
+            };
+            localStorage.setItem(username, JSON.stringify(newUser));
+            alert("Account created successfully!");
+            showLogin();
         }
 
-        async function fetchVideoStats(videoId) {
-            try {
-                const response = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${videoId}&key=${API_KEY}`);
-                const data = await response.json();
-
-                const videoStats = data.items[0].statistics;
-
-                const videoDetailsElement = document.getElementById(`video-details-${videoId}`);
-                videoDetailsElement.innerHTML = `
-                    <div class="video-stats">
-                        <span class="video-stat">Views: ${videoStats.viewCount}</span>
-                        <span class="video-stat">Likes: ${videoStats.likeCount}</span>
-                        <span class="video-stat">Comments: ${videoStats.commentCount}</span>
-                    </div>
-                `;
-            } catch (error) {
-                console.error('Error fetching video stats:', error);
+        // Login Functionality
+        function login() {
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            if (!username || !password) {
+                alert("Please enter both username and password.");
+                return;
             }
+
+            const user = localStorage.getItem(username);
+            if (!user) {
+                alert("Username not found. Please sign up.");
+                return;
+            }
+
+            const userData = JSON.parse(user);
+            if (userData.password !== password) {
+                alert("Incorrect password.");
+                return;
+            }
+
+            // Save current user in local storage
+            localStorage.setItem('currentUser', username);
+            window.location.href = "chat.html"; // Go to chat page after login
         }
 
-        function subscribe() {
-            if (!isSubscribed) {
-                isSubscribed = true;
-                subscriberCount++;
-                localStorage.setItem(`isSubscribed_${currentChannelId}`, 'true');
-                localStorage.setItem(`subscriberCount_${currentChannelId}`, subscriberCount);
-
-                const subscribeButton = document.getElementById('subscribe-btn');
-                subscribeButton.innerText = "Subscribed";
-                subscribeButton.classList.add('subscribed');
-                document.getElementById('subscriber-count').innerText = subscriberCount;
+        // Check if user is already logged in
+        window.onload = function() {
+            const currentUser = localStorage.getItem('currentUser');
+            if (currentUser) {
+                window.location.href = "chat.html"; // Redirect to chat if user is logged in
             }
-        }
-
-        searchButton.addEventListener('click', () => {
-            const query = searchBar.value.trim();
-            if (query) fetchVideos(query);
-        });
-
-        searchBar.addEventListener('keypress', (event) => {
-            if (event.key === 'Enter') {
-                const query = searchBar.value.trim();
-                if (query) fetchVideos(query);
-            }
-        });
-
-        // Fetch default trending videos on load
-        fetchVideos();
+        };
     </script>
 </body>
 </html>
