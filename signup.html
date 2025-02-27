@@ -3,104 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up - Chat System</title>
-    <style>
-        /* Same CSS as before */
-        body {
-            font-family: 'Arial', sans-serif;
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: radial-gradient(circle, rgba(34, 193, 195, 1) 0%, rgba(253, 187, 45, 1) 100%);
-            overflow: hidden;
-        }
-
-        .container {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            width: 400px;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
-            text-align: center;
-        }
-
-        h2 {
-            color: #fff;
-            margin-bottom: 20px;
-            font-size: 2.5em;
-            text-transform: uppercase;
-            font-weight: bold;
-        }
-
-        .signup-form input {
-            width: 100%;
-            padding: 15px;
-            margin: 15px 0;
-            border: none;
-            border-radius: 8px;
-            font-size: 1em;
-            background-color: rgba(255, 255, 255, 0.3);
-        }
-
-        .signup-form button {
-            padding: 15px;
-            background-color: #6a1b9a;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1.2em;
-            width: 100%;
-        }
-
-        .signup-form button:hover {
-            background-color: #9c27b0;
-        }
-
-        p {
-            color: #fff;
-        }
-
-        p a {
-            color: #ffeb3b;
-            text-decoration: none;
-        }
-    </style>
+    <title>Sign Up</title>
+    <link rel="stylesheet" href="signup.css"> <!-- Link to the signup.css file -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
 </head>
 <body>
-
     <div class="container">
         <h2>Sign Up</h2>
-
-        <div id="signup-form" class="signup-form">
-            <input type="text" id="signup-username" placeholder="Username" required />
+        <div class="signup-form">
+            <input type="email" id="signup-email" placeholder="Email" required />
             <input type="password" id="signup-password" placeholder="Password" required />
             <button onclick="signUp()">Sign Up</button>
-            <p>Already have an account? <a href="index.html">Login</a></p>
         </div>
+        <p>Already have an account? <a href="index.html">Login here</a></p>
     </div>
 
     <script>
-        // Simulate user sign-up
+        const firebaseConfig = {
+            apiKey: "AIzaSyArBI87qO7Y9RxpXLODSoNZlk-yWqSv7TE",
+            authDomain: "hiiiii-af7a1.firebaseapp.com",
+            databaseURL: "https://hiiiii-af7a1-default-rtdb.firebaseio.com",
+            projectId: "hiiiii-af7a1",
+            storageBucket: "hiiiii-af7a1.firebasestorage.app",
+            messagingSenderId: "494326302409",
+            appId: "1:494326302409:web:74c7dcda8baa6a246d6f18",
+            measurementId: "G-GLF3TK6L21"
+        };
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        // Sign up function
         function signUp() {
-            const username = document.getElementById("signup-username").value;
+            const email = document.getElementById("signup-email").value;
             const password = document.getElementById("signup-password").value;
 
-            if (username && password) {
-                localStorage.setItem("username", username);
-                localStorage.setItem("password", password);
-                alert("Sign-up successful!");
-
-                // Redirect to index.html (chat system) after successful sign-up
-                window.location.href = "index.html";
+            if (email && password) {
+                auth.createUserWithEmailAndPassword(email, password)
+                    .then((userCredential) => {
+                        alert("Sign-up successful!");
+                        window.location.href = "index.html";  // Redirect to login page (index.html)
+                    })
+                    .catch((error) => {
+                        alert("Error: " + error.message);
+                    });
             } else {
                 alert("Please fill in all fields.");
             }
         }
     </script>
-
 </body>
 </html>
