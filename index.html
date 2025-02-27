@@ -41,26 +41,34 @@
             padding: 10px;
             height: 200px;
             overflow-y: scroll;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column-reverse;
         }
 
         .message {
             padding: 10px;
             margin: 5px 0;
             border-radius: 10px;
-            max-width: 80%;
+            max-width: 70%;
             word-wrap: break-word;
+            font-size: 0.9em;
         }
 
         .user-message {
             background-color: #007bff;
             color: white;
             align-self: flex-end;
+            margin-left: auto;
+            margin-right: 0;
         }
 
         .other-message {
             background-color: #e4e6eb;
             color: black;
             align-self: flex-start;
+            margin-right: auto;
+            margin-left: 0;
         }
 
         .chat-input input {
@@ -131,11 +139,20 @@
             const messageInput = document.getElementById("user-input");
             const message = messageInput.value;
             if (message) {
+                // Create a message from the user
                 const messageElement = document.createElement("div");
                 messageElement.classList.add("message", "user-message");
                 messageElement.textContent = message;
                 document.getElementById("chat-box").appendChild(messageElement);
                 messageInput.value = ""; // Clear input
+
+                // Simulate a response from the other person
+                setTimeout(() => {
+                    const responseElement = document.createElement("div");
+                    responseElement.classList.add("message", "other-message");
+                    responseElement.textContent = "This is a response from the other person.";
+                    document.getElementById("chat-box").appendChild(responseElement);
+                }, 1000);
             }
         }
 
