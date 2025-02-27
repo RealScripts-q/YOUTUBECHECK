@@ -57,15 +57,6 @@
             background-color: #0056b3;
         }
 
-        .signup-form p {
-            margin-top: 20px;
-        }
-
-        .signup-form p a {
-            color: #007bff;
-            text-decoration: none;
-        }
-
         .google-signup {
             margin-top: 20px;
             background-color: #db4437;
@@ -120,25 +111,6 @@
         // Initialize Firebase
         const app = firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
-
-        // Sign Up with Email and Password
-        function signUp() {
-            const username = document.getElementById("signup-username").value;
-            const password = document.getElementById("signup-password").value;
-
-            auth.createUserWithEmailAndPassword(username + "@gmail.com", password)
-                .then((userCredential) => {
-                    // Successfully signed up
-                    const user = userCredential.user;
-                    alert("Sign-up successful! Welcome, " + user.displayName);
-                    window.location.href = "index.html"; // Redirect to the chat page (index.html)
-                })
-                .catch((error) => {
-                    const errorCode = error.code;
-                    const errorMessage = error.message;
-                    alert(errorMessage);
-                });
-        }
 
         // Sign Up with Google OAuth
         function googleSignUp() {
