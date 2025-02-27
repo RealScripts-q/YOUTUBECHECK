@@ -4,25 +4,124 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat System</title>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
     <style>
-        /* Your styles here */
+        /* Same CSS as before, but also include chat box styling */
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle, rgba(34, 193, 195, 1) 0%, rgba(253, 187, 45, 1) 100%);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            width: 400px;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .chat-box {
+            background: #fff;
+            border-radius: 8px;
+            padding: 10px;
+            height: 300px;
+            overflow-y: scroll;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column-reverse;
+        }
+
+        .message {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 10px;
+            max-width: 70%;
+            word-wrap: break-word;
+            font-size: 0.9em;
+        }
+
+        .user-message {
+            background-color: #007bff;
+            color: white;
+            align-self: flex-end;
+            margin-left: auto;
+            margin-right: 0;
+        }
+
+        .other-message {
+            background-color: #e4e6eb;
+            color: black;
+            align-self: flex-start;
+            margin-right: auto;
+            margin-left: 0;
+        }
+
+        .chat-input input {
+            padding: 10px;
+            width: 80%;
+            border-radius: 8px;
+            border: none;
+            font-size: 1em;
+        }
+
+        .chat-input button {
+            padding: 10px;
+            background-color: #6a1b9a;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2em;
+        }
+
+        .logout-button {
+            padding: 10px;
+            background-color: red;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .logout-button:hover {
+            background-color: #d9534f;
+        }
+
     </style>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-database.js"></script>
 </head>
 <body>
-    <div class="container" id="chat-container" style="display: none;">
-        <h2>Chat System</h2>
-        <div class="chat-box" id="chat-box"></div>
+
+    <div class="container">
+        <h2>Welcome to Chat!</h2>
+
+        <!-- Chat Box -->
+        <div id="chat-box" class="chat-box"></div>
+
+        <!-- Chat Input -->
         <div class="chat-input">
             <input type="text" id="user-input" placeholder="Type a message..." />
             <button onclick="sendMessage()">Send</button>
         </div>
+
+        <!-- Logout Button -->
         <button class="logout-button" onclick="logout()">Logout</button>
     </div>
 
+    <!-- Firebase Configuration -->
     <script>
+        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyArBI87qO7Y9RxpXLODSoNZlk-yWqSv7TE",
             authDomain: "hiiiii-af7a1.firebaseapp.com",
@@ -37,63 +136,58 @@
         // Initialize Firebase
         const app = firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
-        const db = firebase.firestore();
+        const database = firebase.database();
 
+        // Check if the user is logged in
         let currentUser = null;
 
-        // Check if the user is logged in, else redirect to sign-up page
+        // Listen for user authentication state
         auth.onAuthStateChanged((user) => {
             if (user) {
                 currentUser = user;
-                document.getElementById("chat-container").style.display = "block";
+                // Show messages after login
                 loadMessages();
             } else {
-                window.location.href = "signup.html";  // Redirect to sign-up page if not logged in
+                window.location.href = "signup.html";
             }
         });
 
-        // Load chat messages from Firestore
-        function loadMessages() {
-            db.collection("messages").orderBy("timestamp")
-                .onSnapshot((snapshot) => {
-                    const chatBox = document.getElementById("chat-box");
-                    chatBox.innerHTML = "";
-                    snapshot.forEach(doc => {
-                        const message = doc.data();
-                        const messageElement = document.createElement("div");
-                        messageElement.classList.add("message");
-                        messageElement.textContent = `${message.username}: ${message.text}`;
-                        chatBox.appendChild(messageElement);
-                    });
-                });
-        }
-
-        // Send message to Firestore
+        // Send a message to Firebase
         function sendMessage() {
-            const messageInput = document.getElementById("user-input");
-            const message = messageInput.value;
-
-            if (message) {
-                db.collection("messages").add({
-                    username: currentUser.email,
-                    text: message,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                }).then(() => {
-                    messageInput.value = "";
-                }).catch((error) => {
-                    alert("Error sending message: " + error.message);
+            const message = document.getElementById("user-input").value;
+            if (message.trim() !== "") {
+                database.ref("messages").push({
+                    user: currentUser.displayName,
+                    message: message,
+                    timestamp: Date.now()
                 });
+                document.getElementById("user-input").value = ""; // clear input field
             }
         }
 
-        // Logout function
-        function logout() {
-            auth.signOut().then(() => {
-                window.location.href = "signup.html";  // Redirect to signup page after logout
-            }).catch((error) => {
-                alert("Error logging out: " + error.message);
+        // Load all messages from Firebase
+        function loadMessages() {
+            database.ref("messages").on("child_added", (snapshot) => {
+                const data = snapshot.val();
+                const messageDiv = document.createElement("div");
+                messageDiv.classList.add("message");
+
+                if (data.user === currentUser.displayName) {
+                    messageDiv.classList.add("user-message");
+                } else {
+                    messageDiv.classList.add("other-message");
+                }
+
+                messageDiv.innerText = data.message;
+                document.getElementById("chat-box").prepend(messageDiv);
             });
         }
+
+        // Log out the user
+        function logout() {
+            auth.signOut();
+        }
     </script>
+
 </body>
 </html>
