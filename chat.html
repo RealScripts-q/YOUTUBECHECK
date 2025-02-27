@@ -3,14 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat System</title>
+    <title>Chat Login</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
@@ -20,44 +14,25 @@
             height: 100vh;
         }
 
-        .chat-container {
-            width: 400px;
-            max-width: 100%;
+        .container {
             background-color: white;
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
+            padding: 30px;
+            width: 300px;
         }
 
-        .chat-box {
-            padding: 20px;
-            height: 300px;
-            overflow-y: auto;
-            flex-grow: 1;
-            border-bottom: 1px solid #ddd;
-            display: flex;
-            flex-direction: column-reverse;
-        }
-
-        .chat-input {
-            display: flex;
+        .container input {
+            width: 100%;
             padding: 10px;
-            background-color: #f9f9f9;
-            border-top: 1px solid #ddd;
-        }
-
-        #user-input {
-            width: 80%;
-            padding: 10px;
+            margin-bottom: 10px;
             border-radius: 4px;
             border: 1px solid #ddd;
-            margin-right: 10px;
         }
 
-        button {
-            padding: 10px 20px;
+        .container button {
+            width: 100%;
+            padding: 10px;
             background-color: #007bff;
             color: white;
             border: none;
@@ -65,161 +40,119 @@
             cursor: pointer;
         }
 
-        button:hover {
+        .container button:hover {
             background-color: #0056b3;
         }
 
-        .user-message, .other-message {
-            max-width: 80%;
-            margin-bottom: 10px;
-            padding: 10px;
-            border-radius: 10px;
-            word-wrap: break-word;
-            display: inline-block;
-        }
-
-        .user-message {
-            background-color: #007bff;
-            color: white;
-            align-self: flex-end;
-        }
-
-        .other-message {
-            background-color: #e4e6eb;
-            color: black;
-            align-self: flex-start;
-        }
-
-        .muted {
-            background-color: #f0f0f0;
-            color: #ccc;
-        }
-
-        .info-message {
-            background-color: #f4f4f4;
-            padding: 5px;
+        .message {
+            text-align: center;
             margin-top: 10px;
-            font-size: 14px;
-            color: #666;
         }
+
+        #login-page, #signup-page {
+            display: none;
+        }
+
+        #login-page.active, #signup-page.active {
+            display: block;
+        }
+
     </style>
 </head>
 <body>
-    <div class="chat-container">
-        <div class="chat-box" id="chat-box">
-            <!-- Chat messages will appear here -->
+    <div class="container">
+        <!-- Sign-Up Form -->
+        <div id="signup-page" class="active">
+            <h2>Sign Up</h2>
+            <input type="text" id="signup-username" placeholder="Enter Username" required>
+            <input type="password" id="signup-password" placeholder="Enter Password" required>
+            <button onclick="signUp()">Sign Up</button>
+            <p class="message">Already have an account? <a href="#" onclick="showLogin()">Login</a></p>
         </div>
-        <div class="chat-input">
-            <input type="text" id="user-input" placeholder="Type a message..." disabled>
-            <button onclick="sendMessage()" id="send-button" disabled>Send</button>
+
+        <!-- Login Form -->
+        <div id="login-page">
+            <h2>Login</h2>
+            <input type="text" id="login-username" placeholder="Enter Username" required>
+            <input type="password" id="login-password" placeholder="Enter Password" required>
+            <button onclick="login()">Login</button>
+            <p class="message">Don't have an account? <a href="#" onclick="showSignUp()">Sign Up</a></p>
         </div>
     </div>
 
     <script>
-        const inappropriateWords = [
-            'phishing', 'pedophile', 'scam', 'malware', 'hate', 'violence', 'kill', 'bomb'
-        ];
-
-        let currentUser = localStorage.getItem('currentUser');
-        let userStatus = JSON.parse(localStorage.getItem(currentUser));
-
-        // Initialize chat based on user status
-        document.getElementById('user-input').disabled = false;
-        document.getElementById('send-button').disabled = false;
-        
-        if (userStatus.status === 'muted') {
-            muteUser(userStatus.muteTime);
+        // Show Sign-Up form
+        function showSignUp() {
+            document.getElementById('signup-page').classList.add('active');
+            document.getElementById('login-page').classList.remove('active');
         }
 
-        // Handle sending messages
-        function sendMessage() {
-            if (userStatus.status === 'muted') {
-                alert(`You are muted. Remaining time: ${formatTime(userStatus.muteTime)}`);
+        // Show Login form
+        function showLogin() {
+            document.getElementById('login-page').classList.add('active');
+            document.getElementById('signup-page').classList.remove('active');
+        }
+
+        // Sign-Up Functionality
+        function signUp() {
+            const username = document.getElementById('signup-username').value;
+            const password = document.getElementById('signup-password').value;
+            if (!username || !password) {
+                alert("Please enter both username and password.");
                 return;
             }
 
-            const userInput = document.getElementById('user-input');
-            const chatBox = document.getElementById('chat-box');
-            const message = userInput.value.trim();
-            
-            if (message && !containsInappropriateWords(message)) {
-                // Add the message to the chat
-                const newMessage = document.createElement('div');
-                newMessage.textContent = message;
-                newMessage.classList.add('user-message');
-                chatBox.appendChild(newMessage);
-
-                // Scroll to the bottom
-                chatBox.scrollTop = chatBox.scrollHeight;
-
-                userInput.value = '';
-            } else {
-                handleInappropriateMessage();
-            }
-        }
-
-        // Check if message contains inappropriate words
-        function containsInappropriateWords(message) {
-            return inappropriateWords.some(word => message.toLowerCase().includes(word));
-        }
-
-        // Handle inappropriate message
-        function handleInappropriateMessage() {
-            userStatus.offenses++;
-
-            if (userStatus.offenses === 1) {
-                alert("Warning: This is your first offense.");
-                updateStatus("Warning: This is your first offense.");
-            } else if (userStatus.offenses === 2) {
-                alert("You are muted for 5 minutes.");
-                muteUser(5);
-                updateStatus("You are muted for 5 minutes.");
-            } else if (userStatus.offenses >= 3) {
-                alert("You are permanently banned.");
-                userStatus.status = "banned";
-                updateStatus("You are permanently banned.");
+            const userExists = localStorage.getItem(username);
+            if (userExists) {
+                alert("Username already exists. Please login.");
+                return;
             }
 
-            localStorage.setItem(currentUser, JSON.stringify(userStatus));
+            const newUser = {
+                username: username,
+                password: password,
+                status: "active",
+                offenses: 0,
+                muteTime: 0
+            };
+            localStorage.setItem(username, JSON.stringify(newUser));
+            alert("Account created successfully!");
+            showLogin();
         }
 
-        // Mute user for a specified duration
-        function muteUser(minutes) {
-            userStatus.status = 'muted';
-            userStatus.muteTime = minutes * 60000;
-            document.getElementById('user-input').disabled = true;
-            document.getElementById('send-button').disabled = true;
+        // Login Functionality
+        function login() {
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            if (!username || !password) {
+                alert("Please enter both username and password.");
+                return;
+            }
 
-            setTimeout(unmuteUser, userStatus.muteTime);
+            const user = localStorage.getItem(username);
+            if (!user) {
+                alert("Username not found. Please sign up.");
+                return;
+            }
+
+            const userData = JSON.parse(user);
+            if (userData.password !== password) {
+                alert("Incorrect password.");
+                return;
+            }
+
+            // Save current user in local storage
+            localStorage.setItem('currentUser', username);
+            window.location.href = "chat.html"; // Go to chat page after login
         }
 
-        // Unmute user after the specified time
-        function unmuteUser() {
-            userStatus.status = 'active';
-            userStatus.muteTime = 0;
-            localStorage.setItem(currentUser, JSON.stringify(userStatus));
-
-            document.getElementById('user-input').disabled = false;
-            document.getElementById('send-button').disabled = false;
-            alert("You have been unmuted.");
-        }
-
-        // Update status in chat box
-        function updateStatus(message) {
-            const chatBox = document.getElementById('chat-box');
-            const infoMessage = document.createElement('div');
-            infoMessage.textContent = message;
-            infoMessage.classList.add('info-message');
-            chatBox.appendChild(infoMessage);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-
-        // Format mute time into readable format
-        function formatTime(time) {
-            const minutes = Math.floor(time / 60000);
-            const seconds = Math.floor((time % 60000) / 1000);
-            return `${minutes} minute(s) and ${seconds} second(s)`;
-        }
+        // Check if user is already logged in
+        window.onload = function() {
+            const currentUser = localStorage.getItem('currentUser');
+            if (currentUser) {
+                window.location.href = "chat.html"; // Redirect to chat if user is logged in
+            }
+        };
     </script>
 </body>
 </html>
