@@ -3,36 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat Login</title>
+    <title>Chat System</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
         }
 
         .container {
             background-color: white;
+            width: 400px;
+            max-width: 100%;
+            padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            padding: 30px;
-            width: 300px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
 
-        .container input {
-            width: 100%;
+        #chat-container {
+            display: none;
+        }
+
+        #login-container, #signup-container {
+            display: block;
+        }
+
+        .chat-box {
+            height: 300px;
+            overflow-y: auto;
+            border-bottom: 1px solid #ddd;
+            padding: 20px;
+            display: flex;
+            flex-direction: column-reverse;
+        }
+
+        .chat-input {
+            display: flex;
             padding: 10px;
-            margin-bottom: 10px;
+            background-color: #f9f9f9;
+            border-top: 1px solid #ddd;
+        }
+
+        #user-input {
+            width: 80%;
+            padding: 10px;
             border-radius: 4px;
             border: 1px solid #ddd;
+            margin-right: 10px;
         }
 
-        .container button {
-            width: 100%;
-            padding: 10px;
+        button {
+            padding: 10px 20px;
             background-color: #007bff;
             color: white;
             border: none;
@@ -40,119 +65,147 @@
             cursor: pointer;
         }
 
-        .container button:hover {
+        button:hover {
             background-color: #0056b3;
         }
 
+        .logout-button {
+            background-color: red;
+            margin-top: 20px;
+            padding: 10px;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .logout-button:hover {
+            background-color: #d9534f;
+        }
+
         .message {
-            text-align: center;
-            margin-top: 10px;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 10px;
+            max-width: 80%;
+            word-wrap: break-word;
         }
 
-        #login-page, #signup-page {
-            display: none;
+        .user-message {
+            background-color: #007bff;
+            color: white;
+            align-self: flex-end;
         }
 
-        #login-page.active, #signup-page.active {
-            display: block;
+        .other-message {
+            background-color: #e4e6eb;
+            color: black;
+            align-self: flex-start;
         }
 
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Sign-Up Form -->
-        <div id="signup-page" class="active">
-            <h2>Sign Up</h2>
-            <input type="text" id="signup-username" placeholder="Enter Username" required>
-            <input type="password" id="signup-password" placeholder="Enter Password" required>
-            <button onclick="signUp()">Sign Up</button>
-            <p class="message">Already have an account? <a href="#" onclick="showLogin()">Login</a></p>
+        <!-- Chatbox (Initially Hidden) -->
+        <div id="chat-container">
+            <div class="chat-box" id="chat-box"></div>
+            <div class="chat-input">
+                <input type="text" id="user-input" placeholder="Type a message..." />
+                <button onclick="sendMessage()">Send</button>
+            </div>
+            <button class="logout-button" onclick="logout()">Logout</button>
         </div>
 
         <!-- Login Form -->
-        <div id="login-page">
+        <div id="login-container">
             <h2>Login</h2>
-            <input type="text" id="login-username" placeholder="Enter Username" required>
-            <input type="password" id="login-password" placeholder="Enter Password" required>
+            <input type="text" id="login-username" placeholder="Username" required />
+            <input type="password" id="login-password" placeholder="Password" required />
             <button onclick="login()">Login</button>
-            <p class="message">Don't have an account? <a href="#" onclick="showSignUp()">Sign Up</a></p>
+            <p>Don't have an account? <a href="#" onclick="showSignUp()">Sign Up</a></p>
+        </div>
+
+        <!-- Sign-Up Form -->
+        <div id="signup-container" style="display: none;">
+            <h2>Sign Up</h2>
+            <input type="text" id="signup-username" placeholder="Username" required />
+            <input type="password" id="signup-password" placeholder="Password" required />
+            <button onclick="signUp()">Sign Up</button>
+            <p>Already have an account? <a href="#" onclick="showLogin()">Login</a></p>
         </div>
     </div>
 
     <script>
-        // Show Sign-Up form
+        // Simulated storage for logged-in user
+        let currentUser = null;
+
+        // Toggle between login and signup forms
         function showSignUp() {
-            document.getElementById('signup-page').classList.add('active');
-            document.getElementById('login-page').classList.remove('active');
+            document.getElementById("login-container").style.display = "none";
+            document.getElementById("signup-container").style.display = "block";
         }
 
-        // Show Login form
         function showLogin() {
-            document.getElementById('login-page').classList.add('active');
-            document.getElementById('signup-page').classList.remove('active');
+            document.getElementById("signup-container").style.display = "none";
+            document.getElementById("login-container").style.display = "block";
         }
 
-        // Sign-Up Functionality
+        // Simulate user sign-up (in a real-world app, this would be done with a backend)
         function signUp() {
-            const username = document.getElementById('signup-username').value;
-            const password = document.getElementById('signup-password').value;
-            if (!username || !password) {
-                alert("Please enter both username and password.");
-                return;
-            }
+            const username = document.getElementById("signup-username").value;
+            const password = document.getElementById("signup-password").value;
 
-            const userExists = localStorage.getItem(username);
-            if (userExists) {
-                alert("Username already exists. Please login.");
-                return;
+            if (username && password) {
+                localStorage.setItem("username", username);
+                localStorage.setItem("password", password);
+                alert("Sign-up successful!");
+                showLogin(); // Switch to login page after signup
+            } else {
+                alert("Please fill in all fields.");
             }
-
-            const newUser = {
-                username: username,
-                password: password,
-                status: "active",
-                offenses: 0,
-                muteTime: 0
-            };
-            localStorage.setItem(username, JSON.stringify(newUser));
-            alert("Account created successfully!");
-            showLogin();
         }
 
-        // Login Functionality
+        // Simulate user login (in a real-world app, this would be done with a backend)
         function login() {
-            const username = document.getElementById('login-username').value;
-            const password = document.getElementById('login-password').value;
-            if (!username || !password) {
-                alert("Please enter both username and password.");
-                return;
-            }
+            const username = document.getElementById("login-username").value;
+            const password = document.getElementById("login-password").value;
 
-            const user = localStorage.getItem(username);
-            if (!user) {
-                alert("Username not found. Please sign up.");
-                return;
-            }
+            const storedUsername = localStorage.getItem("username");
+            const storedPassword = localStorage.getItem("password");
 
-            const userData = JSON.parse(user);
-            if (userData.password !== password) {
-                alert("Incorrect password.");
-                return;
+            if (username === storedUsername && password === storedPassword) {
+                currentUser = username;
+                document.getElementById("login-container").style.display = "none";
+                document.getElementById("chat-container").style.display = "block";
+                document.getElementById("chat-box").innerHTML = `<div class="message other-message">Welcome, ${currentUser}!</div>`;
+            } else {
+                alert("Invalid login credentials.");
             }
-
-            // Save current user in local storage
-            localStorage.setItem('currentUser', username);
-            window.location.href = "chat.html"; // Go to chat page after login
         }
 
-        // Check if user is already logged in
-        window.onload = function() {
-            const currentUser = localStorage.getItem('currentUser');
-            if (currentUser) {
-                window.location.href = "chat.html"; // Redirect to chat if user is logged in
+        // Simulate sending a message
+        function sendMessage() {
+            const messageInput = document.getElementById("user-input");
+            const message = messageInput.value;
+            if (message) {
+                const messageElement = document.createElement("div");
+                messageElement.classList.add("message", "user-message");
+                messageElement.textContent = message;
+                document.getElementById("chat-box").appendChild(messageElement);
+                messageInput.value = ""; // Clear input
             }
-        };
+        }
+
+        // Logout functionality
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem("username");
+            localStorage.removeItem("password");
+
+            document.getElementById("chat-container").style.display = "none";
+            document.getElementById("login-container").style.display = "block";
+        }
     </script>
 </body>
 </html>
